@@ -1,0 +1,3 @@
+CREATE TABLE teams (
+    name TEXT PRIMARY KEY
+);

@@ -48,51 +48,30 @@ func NewError(status int, code ErrorCode, message string, err error) *Error {
 }
 
 func NewTeamExistsError(message string, err error) *Error {
-	if message == "" {
-		message = "team already exists"
-	}
 	return NewError(http.StatusBadRequest, ErrorCodeTeamExists, message, err)
 }
 
 func NewPullRequestExistsError(message string, err error) *Error {
-	if message == "" {
-		message = "pull request already exists"
-	}
 	return NewError(http.StatusConflict, ErrorCodePullRequestExists, message, err)
 }
 
 func NewPullRequestMergedError(message string, err error) *Error {
-	if message == "" {
-		message = "pull request already merged"
-	}
 	return NewError(http.StatusConflict, ErrorCodePullRequestMerged, message, err)
 }
 
 func NewReviewerMissingError(message string, err error) *Error {
-	if message == "" {
-		message = "reviewer is not assigned to pull request"
-	}
 	return NewError(http.StatusConflict, ErrorCodeReviewerMissing, message, err)
 }
 
 func NewNoCandidateError(message string, err error) *Error {
-	if message == "" {
-		message = "no candidate available"
-	}
 	return NewError(http.StatusConflict, ErrorCodeNoCandidate, message, err)
 }
 
 func NewNotFoundError(message string, err error) *Error {
-	if message == "" {
-		message = "resource not found"
-	}
 	return NewError(http.StatusNotFound, ErrorCodeNotFound, message, err)
 }
 
 func NewUnauthorizedError(message string, err error) *Error {
-	if message == "" {
-		message = "unauthorized"
-	}
 	return NewError(http.StatusUnauthorized, ErrorCodeNotFound, message, err)
 }
 

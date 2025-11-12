@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
+    name TEXT NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    team TEXT REFERENCES teams(name) ON DELETE SET NULL
+)
