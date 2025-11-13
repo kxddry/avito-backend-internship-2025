@@ -1,0 +1,322 @@
+version: "2"
+
+linters:
+  default: standard
+  enable:
+    - asasalint
+    - asciicheck
+    - bidichk
+    - canonicalheader
+    - copyloopvar
+    - dogsled
+    - dupl
+    - durationcheck
+    - errname
+    - errorlint
+    - exhaustive
+    - exptostd
+    - fatcontext
+    - gocheckcompilerdirectives
+    - gochecknoglobals
+    - gochecknoinits
+    - gochecksumtype
+    - goconst
+    - gocritic
+    - gomodguard
+    - goprintffuncname
+    - gosec
+    - iface
+    - loggercheck
+    - makezero
+    - mirror
+    - misspell
+    - nakedret
+    - nestif
+    - nilerr
+    - nilnesserr
+    - nolintlint
+    - nosprintfhostport
+    - perfsprint
+    - prealloc
+    - predeclared
+    - promlinter
+    - reassign
+    - tagalign
+    - unconvert
+    - unparam
+    - usestdlibvars
+    - usetesting
+    - testifylint
+    - intrange
+    - gocognit
+  disable:
+    - testpackage
+    - godot
+    - mnd
+    - lll
+  settings:
+    goconst:
+      min-occurrences: 4
+    staticcheck:
+      dot-import-whitelist: [ ]
+      http-status-code-whitelist: [ ]
+      checks:
+        - all
+        - -ST1000
+        - -ST1003
+        - -QF1001
+        - -QF1008
+    errcheck:
+      check-type-assertions: true
+      check-blank: false
+    gosec:
+      includes: [ ]
+      excludes:
+        - G101 # Look for hard coded credentials
+        - G115 # Potential integer overflow when converting between integer types
+      severity: low
+      confidence: low
+    govet:
+      enable-all: true
+      disable:
+        - composites
+        - fieldalignment # TODO: Думаю, что хотим
+        - shadow
+    dupl:
+      threshold: 150
+    godot:
+      scope: declarations
+      exclude:
+        - "^\\s?TODO:"
+      period: true
+      capital: true
+    reassign:
+      patterns:
+        - "EOF"
+        - "Err.*"
+    nestif:
+      min-complexity: 6
+    gocritic:
+      disable-all: true
+      enabled-checks:
+        - appendAssign
+        - appendCombine
+        - argOrder
+        - assignOp
+        - badCall
+        - badCond
+        - badLock
+        - captLocal
+        - caseOrder
+        - commentedOutImport
+        - defaultCaseOrder
+        - deferInLoop
+        - deferUnlambda
+        - deprecatedComment
+        - dupArg
+        - dupBranchBody
+        - dupCase
+        - dupImport
+        - dupSubExpr
+        - elseif
+        - emptyDecl
+        - equalFold
+        - exitAfterDefer
+        - filepathJoin
+        - hexLiteral
+        - httpNoBody
+        - hugeParam
+        - ifElseChain
+        - indexAlloc
+        - mapKey
+        - newDeref
+        - offBy1
+        - paramTypeCombine
+        - rangeExprCopy
+        - rangeValCopy
+        - regexpMust
+        - singleCaseSwitch
+        - sloppyLen
+        - sloppyTypeAssert
+        - stringXbytes
+        - switchTrue
+        - timeExprSimplify
+        - typeAssertChain
+        - typeSwitchVar
+        - underef
+        - unlambda
+        - unslice
+        - valSwap
+        - wrapperFunc
+      settings:
+        underef:
+          skipRecvDeref: false
+    usetesting:
+      # Enable/disable `os.CreateTemp("", ...)` detections.
+      # Default: true
+      os-create-temp: true
+      # Enable/disable `os.MkdirTemp()` detections.
+      # Default: true
+      os-mkdir-temp: true
+      # Enable/disable `os.Setenv()` detections.
+      # Default: true
+      os-setenv: true
+      # Enable/disable `os.TempDir()` detections.
+      # Default: false
+      os-temp-dir: true
+      # Enable/disable `os.Chdir()` detections.
+      # Disabled if Go < 1.24.
+      # Default: true
+      os-chdir: true
+      # Enable/disable `context.Background()` detections.
+      # Disabled if Go < 1.24.
+      # Default: false
+      context-background: true
+      # Enable/disable `context.TODO()` detections.
+      # Disabled if Go < 1.24.
+      # Default: false
+      context-todo: true
+    testifylint:
+      # Disable all checkers (https://github.com/Antonboom/testifylint#checkers).
+      # Default: false
+      disable-all: true
+      enable:
+        - blank-import
+        - bool-compare
+        - compares
+        - contains
+        - empty
+        - encoded-compare
+        - equal-values
+        - error-nil
+        - expected-actual
+        - go-require
+        - float-compare
+        - formatter
+        - len
+        - negative-positive
+        - nil-compare
+        - regexp
+        - require-error
+        - suite-broken-parallel
+        - suite-dont-use-pkg
+        - suite-extra-assert-call
+        - suite-method-signature
+        - suite-subtest-run
+        - suite-thelper
+        - useless-assert
+      go-require:
+        ignore-http-handlers: false
+  exclusions:
+    generated: lax
+    warn-unused: true
+    presets:
+      - common-false-positives
+      - legacy
+    rules:
+      - path: _test\.go
+        linters:
+          - errcheck
+          - errorlint
+          - dupl
+          - goconst
+          - gochecknoglobals
+          - gochecknoinits
+          - promlinter
+          - ineffassign
+          - exhaustive
+          - prealloc
+          - nestif
+          - unparam
+      - path: _test\.go
+        linters:
+          - govet
+        text: "copylocks:"
+      - path: _test\.go
+        linters:
+          - gocritic
+        text: "hugeParam:|rangeValCopy:|httpNoBody:"
+      - path: _test\.go
+        linters:
+          - gosec
+        text: "G505:|G501:|G404:|G401:|G306:"
+      - path: _test\.go
+        linters:
+          - staticcheck
+        text: "SA1019:|SA9004:"
+
+    paths:
+      - (^|/)examples($|/)
+      - common/encoding/base64/
+      - common/crypto/chacha8/
+    paths-except: [ ]
+
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - golines
+  settings:
+    gci:
+      sections:
+        - standard # Standard section: captures all standard packages.
+        - default # Default section: contains all imports that could not be matched to another section type.
+        - prefix(github.com/kxddry/avito-backend-internship-2025) # Custom section: groups all imports with the specified Prefix.
+      no-inline-comments: true
+      no-prefix-comments: true
+      custom-order: true
+      no-lex-order: true
+    gofmt:
+      simplify: true
+      rewrite-rules:
+        - pattern: 'interface{}'
+          replacement: 'any'
+        - pattern: 'a[b:len(a)]'
+          replacement: 'a[b:]'
+    golines:
+      max-len: 200
+      tab-len: 8
+      shorten-comments: true
+      reformat-tags: false
+      chain-split-dots: false
+  exclusions:
+    warn-unused: true
+    generated: strict
+    paths: [ ]
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  uniq-by-line: false
+  new: false
+  fix: false
+
+output:
+  formats:
+    text:
+      path: stdout
+      print-linter-name: true
+      print-issued-lines: true
+      colors: true
+  path-prefix: ""
+  path-mode: "abs"
+  sort-order:
+    - linter
+    - severity
+    - file # filepath, line, and column.
+  show-stats: true
+
+run:
+  timeout: 5m
+  relative-path-mode: gomod
+  issues-exit-code: 1
+  tests: true
+  build-tags: [ ]
+  modules-download-mode: mod
+  allow-parallel-runners: false
+  allow-serial-runners: false
+  go: '1.25'
+  concurrency: 0
+
+severity:
+  default: error
