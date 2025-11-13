@@ -7,6 +7,7 @@ import (
 	"github.com/kxddry/avito-backend-internship-2025/pkg/algo"
 )
 
+// PickReviewers picks two reviewers from the candidates.
 func PickReviewers(candidates []domain.TeamMember, skip algo.Set[string]) []string {
 	n := len(candidates)
 	if n == 0 {
@@ -43,6 +44,7 @@ func PickReviewers(candidates []domain.TeamMember, skip algo.Set[string]) []stri
 	}
 }
 
+// ReplaceReviewer replaces a reviewer from the candidates.
 func ReplaceReviewer(candidates []domain.TeamMember, skip algo.Set[string]) (out string, ok bool) {
 	filtered := make([]domain.TeamMember, 0, len(candidates))
 	for _, cand := range candidates {

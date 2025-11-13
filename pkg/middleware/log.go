@@ -10,6 +10,7 @@ import (
 
 const httpServer = "http_server"
 
+// Zerolog is a middleware that logs the request and response.
 func Zerolog() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {

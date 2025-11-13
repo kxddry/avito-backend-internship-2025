@@ -1,6 +1,6 @@
 package pullrequests
 
-import _ "embed"
+import _ "embed" // embed package is used to embed SQL query files
 
 var (
 	//go:embed queries/create.sql

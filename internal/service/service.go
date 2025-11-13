@@ -14,14 +14,17 @@ import (
 	"github.com/kxddry/avito-backend-internship-2025/pkg/algo"
 )
 
+// Dependencies are the dependencies for the service.
 type Dependencies struct {
 	TransactionManager storage.TxManager
 }
 
+// Service is the service for assigning pull requests to reviewers.
 type Service struct {
 	txmgr storage.TxManager
 }
 
+// New creates a new service.
 func New(deps Dependencies) *Service {
 	txmgr := deps.TransactionManager
 	if txmgr == nil {
@@ -35,6 +38,7 @@ func New(deps Dependencies) *Service {
 
 var _ domain.AssignmentService = (*Service)(nil)
 
+// formatError formats an error.
 func (s *Service) formatError(op string, err error) error {
 	switch {
 	case errors.Is(err, storage.ErrNotFound):
@@ -47,6 +51,7 @@ func (s *Service) formatError(op string, err error) error {
 	}
 }
 
+// CreatePullRequest creates a new pull request.
 func (s *Service) CreatePullRequest(ctx context.Context, input *domain.CreatePullRequestInput) (*domain.PullRequest, error) { //nolint:lll
 	const op = "service.CreatePullRequest"
 	var pr *domain.PullRequest
@@ -92,6 +97,7 @@ func (s *Service) CreatePullRequest(ctx context.Context, input *domain.CreatePul
 	return pr, nil
 }
 
+// MergePullRequest merges a pull request.
 func (s *Service) MergePullRequest(ctx context.Context, input *domain.MergePullRequestInput) (*domain.PullRequest, error) { //nolint:lll
 	const op = "service.MergePullRequest"
 	var pr *domain.PullRequest
@@ -123,6 +129,7 @@ func (s *Service) MergePullRequest(ctx context.Context, input *domain.MergePullR
 	return pr, nil
 }
 
+// ReassignPullRequest reassigns a pull request.
 func (s *Service) ReassignPullRequest(ctx context.Context, input *domain.ReassignPullRequestInput) (*domain.ReassignPullRequestResult, error) { //nolint:lll
 	const op = "service.ReassignPullRequest"
 	var result *domain.ReassignPullRequestResult
@@ -178,6 +185,7 @@ func (s *Service) ReassignPullRequest(ctx context.Context, input *domain.Reassig
 	return result, nil
 }
 
+// transformMembersToUsers transforms a list of team members to a list of users.
 func transformMembersToUsers(teamName string, members []domain.TeamMember) []domain.User {
 	users := make([]domain.User, len(members))
 	for i, member := range members {
@@ -191,6 +199,7 @@ func transformMembersToUsers(teamName string, members []domain.TeamMember) []dom
 	return users
 }
 
+// CreateTeam creates a new team.
 func (s *Service) CreateTeam(ctx context.Context, team *domain.Team) (*domain.Team, error) {
 	const op = "service.CreateTeam"
 	if err := s.txmgr.Do(ctx, func(ctx context.Context, tx storage.Tx) error {
@@ -212,6 +221,7 @@ func (s *Service) CreateTeam(ctx context.Context, team *domain.Team) (*domain.Te
 	return team, nil
 }
 
+// GetTeam gets a team by name.
 func (s *Service) GetTeam(ctx context.Context, teamName string) (*domain.Team, error) {
 	const op = "service.GetTeam"
 	var result *domain.Team
@@ -228,6 +238,7 @@ func (s *Service) GetTeam(ctx context.Context, teamName string) (*domain.Team, e
 	return result, nil
 }
 
+// GetReviewerAssignments gets the reviewer assignments for a user.
 func (s *Service) GetReviewerAssignments(ctx context.Context, userID string) (*domain.ReviewerAssignments, error) {
 	const op = "service.GetReviewerAssignments"
 	result := &domain.ReviewerAssignments{UserID: userID, PullRequests: []domain.PullRequestShort{}}
@@ -256,6 +267,7 @@ func (s *Service) GetReviewerAssignments(ctx context.Context, userID string) (*d
 	return result, nil
 }
 
+// SetUserIsActive sets the active status of a user.
 func (s *Service) SetUserIsActive(ctx context.Context, input *domain.SetUserIsActiveInput) (*domain.User, error) {
 	const op = "service.SetUserIsActive"
 	var user *domain.User

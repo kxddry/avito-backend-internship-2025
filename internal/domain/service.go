@@ -2,6 +2,7 @@ package domain
 
 import "context"
 
+// AssignmentService is the service for assigning pull requests to reviewers.
 type AssignmentService interface {
 	CreatePullRequest(ctx context.Context, input *CreatePullRequestInput) (*PullRequest, error)
 	MergePullRequest(ctx context.Context, input *MergePullRequestInput) (*PullRequest, error)

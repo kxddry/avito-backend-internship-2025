@@ -12,16 +12,19 @@ import (
 	"github.com/kxddry/avito-backend-internship-2025/internal/storage"
 )
 
+// Repository is the repository for pull requests.
 type Repository struct {
 	pool *pgxpool.Pool
 }
 
 var _ storage.PullRequestRepository = (*Repository)(nil)
 
+// New creates a new repository.
 func New(pool *pgxpool.Pool) *Repository {
 	return &Repository{pool: pool}
 }
 
+// Create creates a new pull request.
 func (r *Repository) Create(ctx context.Context, pr *domain.PullRequest) error {
 	q := r.getQuerier(ctx)
 
@@ -44,6 +47,7 @@ func (r *Repository) Create(ctx context.Context, pr *domain.PullRequest) error {
 	return nil
 }
 
+// GetByID gets a pull request by ID.
 func (r *Repository) GetByID(ctx context.Context, pullRequestID string) (domain.PullRequest, error) {
 	q := r.getQuerier(ctx)
 
@@ -77,6 +81,7 @@ func (r *Repository) GetByID(ctx context.Context, pullRequestID string) (domain.
 	}, nil
 }
 
+// GetPRAssignments gets the pull request assignments for a reviewer.
 func (r *Repository) GetPRAssignments(ctx context.Context, reviewerID string) ([]domain.PullRequestShort, error) {
 	q := r.getQuerier(ctx)
 
@@ -114,6 +119,7 @@ func (r *Repository) GetPRAssignments(ctx context.Context, reviewerID string) ([
 	return result, nil
 }
 
+// Update updates a pull request.
 func (r *Repository) Update(ctx context.Context, pr *domain.PullRequest) error {
 	q := r.getQuerier(ctx)
 
@@ -143,6 +149,7 @@ func (r *Repository) Update(ctx context.Context, pr *domain.PullRequest) error {
 	return nil
 }
 
+// getQuerier gets the querier.
 func (r *Repository) getQuerier(ctx context.Context) storage.Querier {
 	if tx, ok := storage.GetTx(ctx); ok {
 		return tx

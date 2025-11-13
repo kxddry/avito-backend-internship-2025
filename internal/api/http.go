@@ -11,16 +11,19 @@ import (
 	"github.com/kxddry/avito-backend-internship-2025/internal/domain"
 )
 
+// Server is the HTTP server for the assignment service.
 type Server struct {
 	service domain.AssignmentService
 }
 
+// NewServer creates a new Server.
 func NewServer(service domain.AssignmentService) *Server {
 	return &Server{
 		service: service,
 	}
 }
 
+// PostPullRequestCreate creates a new pull request.
 func (s *Server) PostPullRequestCreate(ctx context.Context, request generated.PostPullRequestCreateRequestObject) (
 	generated.PostPullRequestCreateResponseObject, error) {
 	if request.Body == nil {
@@ -45,6 +48,7 @@ func (s *Server) PostPullRequestCreate(ctx context.Context, request generated.Po
 	return generated.PostPullRequestCreate201JSONResponse{Pr: &prPayload}, nil
 }
 
+// PostPullRequestMerge merges a pull request.
 func (s *Server) PostPullRequestMerge(ctx context.Context, request generated.PostPullRequestMergeRequestObject) (
 	generated.PostPullRequestMergeResponseObject, error) {
 	if request.Body == nil {
@@ -67,6 +71,7 @@ func (s *Server) PostPullRequestMerge(ctx context.Context, request generated.Pos
 	return generated.PostPullRequestMerge200JSONResponse{Pr: &prPayload}, nil
 }
 
+// PostPullRequestReassign reassigns a pull request.
 func (s *Server) PostPullRequestReassign(ctx context.Context, request generated.PostPullRequestReassignRequestObject) (
 	generated.PostPullRequestReassignResponseObject, error) {
 	if request.Body == nil {
@@ -93,6 +98,7 @@ func (s *Server) PostPullRequestReassign(ctx context.Context, request generated.
 	}, nil
 }
 
+// PostTeamAdd adds a new team.
 func (s *Server) PostTeamAdd(ctx context.Context, request generated.PostTeamAddRequestObject) (
 	generated.PostTeamAddResponseObject, error) {
 	if request.Body == nil {
@@ -115,6 +121,7 @@ func (s *Server) PostTeamAdd(ctx context.Context, request generated.PostTeamAddR
 	}, nil
 }
 
+// GetTeamGet gets a team by name.
 func (s *Server) GetTeamGet(ctx context.Context, request generated.GetTeamGetRequestObject) (
 	generated.GetTeamGetResponseObject, error) {
 	team, err := s.service.GetTeam(ctx, request.Params.TeamName)
@@ -129,6 +136,7 @@ func (s *Server) GetTeamGet(ctx context.Context, request generated.GetTeamGetReq
 	return generated.GetTeamGet200JSONResponse(teamPayload), nil
 }
 
+// GetUsersGetReview gets the reviewer assignments for a user.
 func (s *Server) GetUsersGetReview(ctx context.Context, request generated.GetUsersGetReviewRequestObject) (
 	generated.GetUsersGetReviewResponseObject, error) {
 	result, err := s.service.GetReviewerAssignments(ctx, request.Params.UserId)
@@ -145,6 +153,7 @@ func (s *Server) GetUsersGetReview(ctx context.Context, request generated.GetUse
 	}, nil
 }
 
+// PostUsersSetIsActive sets the active status of a user.
 func (s *Server) PostUsersSetIsActive(ctx context.Context, request generated.PostUsersSetIsActiveRequestObject) (
 	generated.PostUsersSetIsActiveResponseObject, error) {
 	if request.Body == nil {
@@ -170,6 +179,7 @@ func (s *Server) PostUsersSetIsActive(ctx context.Context, request generated.Pos
 	}, nil
 }
 
+// handlePostPullRequestCreateError handles the error for the PostPullRequestCreate endpoint.
 func (s *Server) handlePostPullRequestCreateError(err error) (generated.PostPullRequestCreateResponseObject, error) {
 	appErr, err := unwrapDomainError(err)
 	if err != nil || appErr == nil {
@@ -188,6 +198,7 @@ func (s *Server) handlePostPullRequestCreateError(err error) (generated.PostPull
 	}
 }
 
+// handlePostPullRequestMergeError handles the error for the PostPullRequestMerge endpoint.
 func (s *Server) handlePostPullRequestMergeError(err error) (generated.PostPullRequestMergeResponseObject, error) {
 	appErr, err := unwrapDomainError(err)
 	if err != nil || appErr == nil {
@@ -204,6 +215,7 @@ func (s *Server) handlePostPullRequestMergeError(err error) (generated.PostPullR
 	}
 }
 
+// handlePostPullRequestReassignError handles the error for the PostPullRequestReassign endpoint.
 func (s *Server) handlePostPullRequestReassignError(err error) (generated.PostPullRequestReassignResponseObject, error) { //nolint:lll
 	appErr, err := unwrapDomainError(err)
 	if err != nil || appErr == nil {

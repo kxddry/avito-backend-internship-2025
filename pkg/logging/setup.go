@@ -8,6 +8,7 @@ import (
 	"golang.org/x/term"
 )
 
+// SetupLogger sets up the logger.
 func SetupLogger(debug bool) {
 	level := zerolog.InfoLevel
 	if debug {

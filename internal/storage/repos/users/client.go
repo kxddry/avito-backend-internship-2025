@@ -11,16 +11,19 @@ import (
 	"github.com/kxddry/avito-backend-internship-2025/internal/storage"
 )
 
+// Repository is the repository for users.
 type Repository struct {
 	pool *pgxpool.Pool
 }
 
 var _ storage.UserRepository = (*Repository)(nil)
 
+// New creates a new repository.
 func New(pool *pgxpool.Pool) *Repository {
 	return &Repository{pool: pool}
 }
 
+// GetByID gets a user by ID.
 func (r *Repository) GetByID(ctx context.Context, userID string) (domain.User, error) {
 	q := r.getQuerier(ctx)
 	var (
@@ -46,6 +49,7 @@ func (r *Repository) GetByID(ctx context.Context, userID string) (domain.User, e
 	}, nil
 }
 
+// Update updates a user.
 func (r *Repository) Update(ctx context.Context, user *domain.User) error {
 	q := r.getQuerier(ctx)
 	tag, err := q.Exec(ctx, updateUserQuery, user.UserID, user.Username, user.IsActive, nullableString(user.TeamName))
@@ -58,6 +62,7 @@ func (r *Repository) Update(ctx context.Context, user *domain.User) error {
 	return nil
 }
 
+// UpsertBatch upserts a batch of users.
 func (r *Repository) UpsertBatch(ctx context.Context, users []domain.User) error {
 	if len(users) == 0 {
 		return nil

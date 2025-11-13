@@ -12,12 +12,14 @@ import (
 	usersrepo "github.com/kxddry/avito-backend-internship-2025/internal/storage/repos/users"
 )
 
+// Repositories is a collection of repositories.
 type Repositories struct {
 	PullRequests *prrepo.Repository
 	Teams        *teamsrepo.Repository
 	Users        *usersrepo.Repository
 }
 
+// TxManager is a transaction manager.
 type TxManager struct {
 	pool  *pgxpool.Pool
 	repos *Repositories
@@ -25,6 +27,7 @@ type TxManager struct {
 
 var _ storage.TxManager = (*TxManager)(nil)
 
+// New creates a new TxManager.
 func New(ctx context.Context, dsn string) (*TxManager, error) {
 	config, err := pgxpool.ParseConfig(dsn)
 	if err != nil {
@@ -53,6 +56,7 @@ func New(ctx context.Context, dsn string) (*TxManager, error) {
 	}, nil
 }
 
+// Close closes the database connection pool.
 func (m *TxManager) Close() {
 	m.pool.Close()
 }

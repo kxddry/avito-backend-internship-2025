@@ -11,16 +11,19 @@ import (
 	"github.com/kxddry/avito-backend-internship-2025/internal/storage"
 )
 
+// Repository is the repository for teams.
 type Repository struct {
 	pool *pgxpool.Pool
 }
 
 var _ storage.TeamRepository = (*Repository)(nil)
 
+// New creates a new repository.
 func New(pool *pgxpool.Pool) *Repository {
 	return &Repository{pool: pool}
 }
 
+// Create creates a new team.
 func (r *Repository) Create(ctx context.Context, team *domain.Team) error {
 	q := r.getQuerier(ctx)
 	_, err := q.Exec(ctx, createTeamQuery, team.Name)
@@ -33,6 +36,7 @@ func (r *Repository) Create(ctx context.Context, team *domain.Team) error {
 	return nil
 }
 
+// GetByName gets a team by name.
 func (r *Repository) GetByName(ctx context.Context, teamName string) (domain.Team, error) {
 	q := r.getQuerier(ctx)
 	var name string
@@ -76,6 +80,7 @@ func (r *Repository) GetByName(ctx context.Context, teamName string) (domain.Tea
 	}, nil
 }
 
+// getQuerier gets the querier.
 func (r *Repository) getQuerier(ctx context.Context) storage.Querier {
 	if tx, ok := storage.GetTx(ctx); ok {
 		return tx

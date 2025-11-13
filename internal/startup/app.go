@@ -17,12 +17,14 @@ import (
 	httpmiddleware "github.com/kxddry/avito-backend-internship-2025/pkg/middleware"
 )
 
+// Application is the application.
 type Application struct {
 	cfg    *Config
 	echo   *echo.Echo
 	server *http.Server
 }
 
+// NewApplication creates a new application.
 func NewApplication(cfg *Config, service domain.AssignmentService) (*Application, error) {
 	e := echo.New()
 	e.HideBanner = true
@@ -52,6 +54,7 @@ func NewApplication(cfg *Config, service domain.AssignmentService) (*Application
 	}, nil
 }
 
+// Run runs the application.
 func (a *Application) Run(ctx context.Context) error {
 	errCh := make(chan error, 1)
 
@@ -72,8 +75,10 @@ func (a *Application) Run(ctx context.Context) error {
 	}
 }
 
+// defTimeout is the default timeout.
 const defTimeout = 5 * time.Second
 
+// shutdownTimeout returns the shutdown timeout.
 func shutdownTimeout(cfg *Config) time.Duration {
 	timeout := cfg.ServerConfig.Timeout
 	if timeout <= 0 {
