@@ -20,9 +20,12 @@ const (
 type ErrorMessage string
 
 const (
-	ErrorMessagePullRequestExists ErrorMessage = "PR id already exists"
-	ErrorMessageResourceNotFound  ErrorMessage = "resource not found"
-	ErrorMessageTeamExists        ErrorMessage = "team_name already exists"
+	ErrorMessagePullRequestExists            ErrorMessage = "PR id already exists"
+	ErrorMessageResourceNotFound             ErrorMessage = "resource not found"
+	ErrorMessageTeamExists                   ErrorMessage = "team_name already exists"
+	ErrorMessageReassignOnMerged             ErrorMessage = "cannot reassign on merged PR"
+	ErrorMessageReviewerIsNotAssigned        ErrorMessage = "reviewer is not assigned to this PR"
+	ErrorMessageNoActiveReplacementCandidate ErrorMessage = "no active replacement candidate in team"
 )
 
 type Error struct {
@@ -34,10 +37,20 @@ type Error struct {
 
 // ... i did not want to hardcode this. but your specification forces me to do so ...
 var (
-	ErrorPullRequestExists = NewError(http.StatusConflict, ErrorCodePullRequestExists, string(ErrorMessagePullRequestExists), nil)
-	ErrorResourceNotFound  = NewError(http.StatusNotFound, ErrorCodeNotFound, string(ErrorMessageResourceNotFound), nil)
-	ErrorTeamExists        = NewError(http.StatusBadRequest, ErrorCodeTeamExists, string(ErrorMessageTeamExists), nil)
+	ErrorPullRequestExists      = NewError(http.StatusConflict, ErrorCodePullRequestExists, string(ErrorMessagePullRequestExists), nil)
+	ErrorResourceNotFound       = NewError(http.StatusNotFound, ErrorCodeNotFound, string(ErrorMessageResourceNotFound), nil)
+	ErrorTeamExists             = NewError(http.StatusBadRequest, ErrorCodeTeamExists, string(ErrorMessageTeamExists), nil)
+	ErrorInternal               = NewError(http.StatusInternalServerError, "INTERNAL_ERROR", "internal server error", nil)
+	ErrorCantReassignOnMergedPr = NewError(http.StatusConflict, ErrorCodePullRequestMerged, string(ErrorMessageReassignOnMerged), nil)
+	ErrorReviewerIsNotAssigned  = NewError(http.StatusConflict, ErrorCodeReviewerMissing, string(ErrorMessageReviewerIsNotAssigned), nil)
+	ErrorNoCandidate            = NewError(http.StatusConflict, ErrorCodeNoCandidate, string(ErrorMessageNoActiveReplacementCandidate), nil)
 )
+
+func IsDomainError(err error) bool {
+	var e *Error
+	ok := errors.As(err, &e)
+	return ok
+}
 
 func (e *Error) Error() string {
 	if e.Err != nil {
@@ -60,34 +73,6 @@ func NewError(status int, code ErrorCode, message string, err error) *Error {
 		Message: message,
 		Err:     err,
 	}
-}
-
-func NewTeamExistsError(message string, err error) *Error {
-	return NewError(http.StatusBadRequest, ErrorCodeTeamExists, message, err)
-}
-
-func NewPullRequestExistsError(message string, err error) *Error {
-	return NewError(http.StatusConflict, ErrorCodePullRequestExists, message, err)
-}
-
-func NewPullRequestMergedError(message string, err error) *Error {
-	return NewError(http.StatusConflict, ErrorCodePullRequestMerged, message, err)
-}
-
-func NewReviewerMissingError(message string, err error) *Error {
-	return NewError(http.StatusConflict, ErrorCodeReviewerMissing, message, err)
-}
-
-func NewNoCandidateError(message string, err error) *Error {
-	return NewError(http.StatusConflict, ErrorCodeNoCandidate, message, err)
-}
-
-func NewNotFoundError(message string, err error) *Error {
-	return NewError(http.StatusNotFound, ErrorCodeNotFound, message, err)
-}
-
-func NewUnauthorizedError(message string, err error) *Error {
-	return NewError(http.StatusUnauthorized, ErrorCodeNotFound, message, err)
 }
 
 var ErrNotImplemented = errors.New("not implemented")

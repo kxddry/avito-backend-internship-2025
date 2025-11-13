@@ -97,7 +97,7 @@ func (s *Server) PostTeamAdd(ctx context.Context, request generated.PostTeamAddR
 
 	team := fromGeneratedTeam(*request.Body)
 
-	created, err := s.service.UpsertTeam(ctx, &team)
+	created, err := s.service.CreateTeam(ctx, &team)
 	if err != nil {
 		if resp, err := s.handlePostTeamAddError(err); err != nil || resp != nil {
 			return resp, err
