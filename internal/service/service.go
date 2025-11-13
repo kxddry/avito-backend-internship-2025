@@ -14,53 +14,18 @@ import (
 	"github.com/kxddry/avito-backend-internship-2025/pkg/algo"
 )
 
-type PullRequestRepository interface {
-	Create(ctx context.Context, pr *domain.PullRequest) error
-	GetByID(ctx context.Context, pullRequestID string) (domain.PullRequest, error)
-	GetPRAssignments(ctx context.Context, reviewerID string) ([]domain.PullRequestShort, error) // must return {} if none found instead of nil
-	Update(ctx context.Context, pr *domain.PullRequest) error
-	Delete(ctx context.Context, pullRequestID string) error
-}
-
-type TeamRepository interface {
-	Create(ctx context.Context, team *domain.Team) error
-	GetByName(ctx context.Context, teamName string) (domain.Team, error)
-	Update(ctx context.Context, team *domain.Team) error
-	Delete(ctx context.Context, teamName string) error
-}
-
-type UserRepository interface {
-	Create(ctx context.Context, user *domain.User) error
-	GetByID(ctx context.Context, userID string) (domain.User, error)
-	Update(ctx context.Context, user *domain.User) error
-	UpsertBatch(ctx context.Context, users []domain.User) error
-	Delete(ctx context.Context, userID string) error
-}
-
-type Tx interface {
-	PullRequestRepo() PullRequestRepository
-	TeamRepo() TeamRepository
-	UserRepo() UserRepository
-	Commit() error
-	Rollback() error
-}
-
-type TxManager interface {
-	Do(ctx context.Context, fn func(ctx context.Context, tx Tx) error) error
-}
-
 type Dependencies struct {
-	TransactionManager TxManager
+	TransactionManager storage.TxManager
 }
 
 type Service struct {
-	txmgr TxManager
+	txmgr storage.TxManager
 }
 
 func New(deps Dependencies) *Service {
 	txmgr := deps.TransactionManager
 	if txmgr == nil {
-		panic("разраб ты че решил мне нил давать?")
+		panic("New Service: deps.TransactionManager is nil")
 	}
 
 	return &Service{
@@ -85,7 +50,7 @@ func (s *Service) formatError(op string, err error) error {
 func (s *Service) CreatePullRequest(ctx context.Context, input *domain.CreatePullRequestInput) (*domain.PullRequest, error) {
 	const op = "service.CreatePullRequest"
 	var pr *domain.PullRequest
-	err := s.txmgr.Do(ctx, func(ctx context.Context, tx Tx) error {
+	err := s.txmgr.Do(ctx, func(ctx context.Context, tx storage.Tx) error {
 		prRepo := tx.PullRequestRepo()
 		_, err := prRepo.GetByID(ctx, input.PullRequestID)
 		if err == nil {
@@ -130,7 +95,7 @@ func (s *Service) CreatePullRequest(ctx context.Context, input *domain.CreatePul
 func (s *Service) MergePullRequest(ctx context.Context, input *domain.MergePullRequestInput) (*domain.PullRequest, error) {
 	const op = "service.MergePullRequest"
 	var pr *domain.PullRequest
-	err := s.txmgr.Do(ctx, func(ctx context.Context, tx Tx) error {
+	err := s.txmgr.Do(ctx, func(ctx context.Context, tx storage.Tx) error {
 		prRepo := tx.PullRequestRepo()
 		pr2, err := prRepo.GetByID(ctx, input.PullRequestID)
 		if err != nil {
@@ -161,7 +126,7 @@ func (s *Service) MergePullRequest(ctx context.Context, input *domain.MergePullR
 func (s *Service) ReassignPullRequest(ctx context.Context, input *domain.ReassignPullRequestInput) (*domain.ReassignPullRequestResult, error) {
 	const op = "service.ReassignPullRequest"
 	var result *domain.ReassignPullRequestResult
-	if err := s.txmgr.Do(ctx, func(ctx context.Context, tx Tx) error {
+	if err := s.txmgr.Do(ctx, func(ctx context.Context, tx storage.Tx) error {
 		oldUser, err := tx.UserRepo().GetByID(ctx, input.OldUserID)
 		if err != nil {
 			return err
@@ -228,7 +193,7 @@ func transformMembersToUsers(teamName string, members []domain.TeamMember) []dom
 
 func (s *Service) CreateTeam(ctx context.Context, team *domain.Team) (*domain.Team, error) {
 	const op = "service.CreateTeam"
-	if err := s.txmgr.Do(ctx, func(ctx context.Context, tx Tx) error {
+	if err := s.txmgr.Do(ctx, func(ctx context.Context, tx storage.Tx) error {
 		if err := tx.TeamRepo().Create(ctx, team); err != nil {
 			return err
 		}
@@ -250,7 +215,7 @@ func (s *Service) CreateTeam(ctx context.Context, team *domain.Team) (*domain.Te
 func (s *Service) GetTeam(ctx context.Context, teamName string) (*domain.Team, error) {
 	const op = "service.GetTeam"
 	var result *domain.Team
-	if err := s.txmgr.Do(ctx, func(ctx context.Context, tx Tx) error {
+	if err := s.txmgr.Do(ctx, func(ctx context.Context, tx storage.Tx) error {
 		team, err := tx.TeamRepo().GetByName(ctx, teamName)
 		if err != nil {
 			return err
@@ -267,7 +232,7 @@ func (s *Service) GetReviewerAssignments(ctx context.Context, userID string) (*d
 	const op = "service.GetReviewerAssignments"
 	result := &domain.ReviewerAssignments{UserID: userID, PullRequests: []domain.PullRequestShort{}}
 
-	if err := s.txmgr.Do(ctx, func(ctx context.Context, tx Tx) (err error) {
+	if err := s.txmgr.Do(ctx, func(ctx context.Context, tx storage.Tx) (err error) {
 		_, err = tx.UserRepo().GetByID(ctx, userID)
 		if err != nil {
 			if errors.Is(err, storage.ErrNotFound) {
@@ -294,7 +259,7 @@ func (s *Service) GetReviewerAssignments(ctx context.Context, userID string) (*d
 func (s *Service) SetUserIsActive(ctx context.Context, input *domain.SetUserIsActiveInput) (*domain.User, error) {
 	const op = "service.SetUserIsActive"
 	var user *domain.User
-	if err := s.txmgr.Do(ctx, func(ctx context.Context, tx Tx) error {
+	if err := s.txmgr.Do(ctx, func(ctx context.Context, tx storage.Tx) error {
 		userRepo := tx.UserRepo()
 		user2, err := userRepo.GetByID(ctx, input.UserID)
 		if err != nil {

@@ -4,6 +4,21 @@
 
 Условия задачи описаны в файле [TASK.md](./TASK.md).
 
+## Quick Start
+
+1. **клонируйте репозиторий**:
+    ```bash
+    git clone https://github.com/kxddry/avito-backend-internship-2025
+    cd avito-backend-internship-2025
+    ```
+
+2. **запустите сервис**:
+    ```bash
+    docker-compose up --build
+    ```
+
+3. **профит**
+
 
 ### Вопросы
 

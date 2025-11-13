@@ -1,0 +1,14 @@
+debug: false
+
+db:
+  host: "localhost"
+  port: 5432
+  user: "root"
+#  password: "supersecret" # password is in DB_PASSWORD
+  db_name: "my_db"
+  ssl_mode: "disable"
+
+server:
+  port: 8080
+  timeout: 5s
+  idle_timeout: 30s

@@ -2,22 +2,27 @@ package startup
 
 import (
 	"flag"
+	"fmt"
+	"net/url"
 	"os"
 	"time"
 
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
-func (c *Config) Read() error {
+func ReadConfig() (*Config, error) {
 	configPath := os.Getenv("CONFIG_PATH")
 	flag.StringVar(&configPath, "config", configPath, "Path to configuration file")
 
 	flag.Parse()
-
+	var c Config
 	if err := cleanenv.ReadConfig(configPath, &c); err != nil {
-		return err
+		return nil, err
 	}
-	return c.Validate()
+	if err := c.Validate(); err != nil {
+		return nil, fmt.Errorf("validate config: %w", err)
+	}
+	return &c, nil
 }
 
 func (c *Config) Validate() error {
@@ -43,4 +48,20 @@ type DBConfig struct {
 	Password string `env:"DB_PASSWORD" env-required:"true"`
 	DBName   string `yaml:"db_name" env-required:"true"`
 	SSLMode  string `yaml:"ssl_mode" env-required:"true"`
+}
+
+func (d *DBConfig) DSN() string {
+	userInfo := url.UserPassword(d.User, d.Password)
+	u := &url.URL{
+		Scheme: "postgresql",
+		User:   userInfo,
+		Host:   fmt.Sprintf("%s:%d", d.Host, d.Port),
+		Path:   d.DBName,
+	}
+
+	query := u.Query()
+	query.Set("sslmode", d.SSLMode)
+	u.RawQuery = query.Encode()
+
+	return u.String()
 }

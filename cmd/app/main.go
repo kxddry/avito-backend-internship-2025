@@ -10,8 +10,8 @@ import (
 )
 
 func main() {
-	cfg := new(startup.Config)
-	if err := cfg.Read(); err != nil {
+	cfg, err := startup.ReadConfig()
+	if err != nil {
 		log.Fatal().Err(err).Msg("failed to read configuration")
 	}
 	logging.SetupLogger(cfg.Debug)

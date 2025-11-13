@@ -2,83 +2,57 @@ package txmanager
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/kxddry/avito-backend-internship-2025/internal/storage"
+	prrepo "github.com/kxddry/avito-backend-internship-2025/internal/storage/repos/pullrequests"
+	teamsrepo "github.com/kxddry/avito-backend-internship-2025/internal/storage/repos/teams"
+	usersrepo "github.com/kxddry/avito-backend-internship-2025/internal/storage/repos/users"
 )
+
+type Repositories struct {
+	PullRequests *prrepo.Repository
+	Teams        *teamsrepo.Repository
+	Users        *usersrepo.Repository
+}
 
 type TxManager struct {
 	pool  *pgxpool.Pool
 	repos *Repositories
 }
 
-type Repositories struct {
-	// repos here
-}
+var _ storage.TxManager = (*TxManager)(nil)
 
 func New(ctx context.Context, dsn string) (*TxManager, error) {
-	panic("not implemented")
+	config, err := pgxpool.ParseConfig(dsn)
+	if err != nil {
+		return nil, fmt.Errorf("parse pool config: %w", err)
+	}
+
+	pool, err := pgxpool.NewWithConfig(ctx, config)
+	if err != nil {
+		return nil, fmt.Errorf("create pool: %w", err)
+	}
+
+	if err := pool.Ping(ctx); err != nil {
+		pool.Close()
+		return nil, fmt.Errorf("ping database: %w", err)
+	}
+
+	repos := &Repositories{
+		PullRequests: prrepo.New(pool),
+		Teams:        teamsrepo.New(pool),
+		Users:        usersrepo.New(pool),
+	}
+
+	return &TxManager{
+		pool:  pool,
+		repos: repos,
+	}, nil
 }
 
 func (m *TxManager) Close() {
 	m.pool.Close()
-}
-
-type tx struct {
-	ctx   context.Context
-	repos *Repositories
-	tx    pgx.Tx
-}
-
-// Rollback rolls back the transaction.
-func (t *tx) Rollback(ctx context.Context) error {
-	return t.tx.Rollback(ctx)
-}
-
-// Commit commits the transaction.
-func (t *tx) Commit(ctx context.Context) error {
-	return t.tx.Commit(ctx)
-}
-
-// Do executes a function within a transaction.
-func (m *TxManager) Do(ctx context.Context, fn func(ctx context.Context, tx *tx) error) error {
-	pgTx, err := m.pool.Begin(ctx)
-	if err != nil {
-		return err
-	}
-
-	t := &tx{
-		ctx:   ctx,
-		repos: m.repos,
-		tx:    pgTx,
-	}
-
-	if err := fn(ctx, t); err != nil {
-		_ = t.Rollback(ctx)
-		return err
-	}
-
-	return t.Commit(ctx)
-}
-
-// DoWith starts a transaction, injects it into the context, and runs the provided function.
-// It commits on success and rolls back on error.
-//
-//nolint:gocognit
-func (m *TxManager) DoWith(ctx context.Context, fn func(ctx context.Context) error) error {
-	pgTx, err := m.pool.Begin(ctx)
-	if err != nil {
-		return err
-	}
-
-	ctxWithTx := storage.WithTx(ctx, pgTx)
-
-	if err := fn(ctxWithTx); err != nil {
-		_ = pgTx.Rollback(ctx)
-		return err
-	}
-
-	return pgTx.Commit(ctx)
 }
