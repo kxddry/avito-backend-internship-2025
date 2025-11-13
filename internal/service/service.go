@@ -38,16 +38,16 @@ var _ domain.AssignmentService = (*Service)(nil)
 func (s *Service) formatError(op string, err error) error {
 	switch {
 	case errors.Is(err, storage.ErrNotFound):
-		return domain.ErrorResourceNotFound
+		return domain.ErrResourceNotFound
 	case domain.IsDomainError(err):
 		return err
 	default:
 		log.Error().Err(err).Str("operation", op).Msg("operation failed")
-		return domain.ErrorInternal
+		return domain.ErrInternal
 	}
 }
 
-func (s *Service) CreatePullRequest(ctx context.Context, input *domain.CreatePullRequestInput) (*domain.PullRequest, error) {
+func (s *Service) CreatePullRequest(ctx context.Context, input *domain.CreatePullRequestInput) (*domain.PullRequest, error) { //nolint:lll
 	const op = "service.CreatePullRequest"
 	var pr *domain.PullRequest
 	err := s.txmgr.Do(ctx, func(ctx context.Context, tx storage.Tx) error {
@@ -85,14 +85,14 @@ func (s *Service) CreatePullRequest(ctx context.Context, input *domain.CreatePul
 
 	if err != nil {
 		if errors.Is(err, storage.ErrAlreadyExists) {
-			return nil, domain.ErrorPullRequestExists
+			return nil, domain.ErrPRExists
 		}
 		return nil, s.formatError(op, err)
 	}
 	return pr, nil
 }
 
-func (s *Service) MergePullRequest(ctx context.Context, input *domain.MergePullRequestInput) (*domain.PullRequest, error) {
+func (s *Service) MergePullRequest(ctx context.Context, input *domain.MergePullRequestInput) (*domain.PullRequest, error) { //nolint:lll
 	const op = "service.MergePullRequest"
 	var pr *domain.PullRequest
 	err := s.txmgr.Do(ctx, func(ctx context.Context, tx storage.Tx) error {
@@ -123,7 +123,7 @@ func (s *Service) MergePullRequest(ctx context.Context, input *domain.MergePullR
 	return pr, nil
 }
 
-func (s *Service) ReassignPullRequest(ctx context.Context, input *domain.ReassignPullRequestInput) (*domain.ReassignPullRequestResult, error) {
+func (s *Service) ReassignPullRequest(ctx context.Context, input *domain.ReassignPullRequestInput) (*domain.ReassignPullRequestResult, error) { //nolint:lll
 	const op = "service.ReassignPullRequest"
 	var result *domain.ReassignPullRequestResult
 	if err := s.txmgr.Do(ctx, func(ctx context.Context, tx storage.Tx) error {
@@ -144,22 +144,22 @@ func (s *Service) ReassignPullRequest(ctx context.Context, input *domain.Reassig
 		}
 
 		if !slices.Contains(pr.AssignedReviewers, oldUser.UserID) {
-			return domain.ErrorReviewerIsNotAssigned
+			return domain.ErrReviewerMissing
 		}
 
 		if pr.Status == domain.PullRequestStatusMerged {
-			return domain.ErrorCantReassignOnMergedPr
+			return domain.ErrReassignOnMerged
 		}
 
 		excludeSet := algo.SetFrom(pr.AssignedReviewers...)
 		excludeSet.Add(pr.AuthorID)
 		newReviewerID, ok := helpers.ReplaceReviewer(team.Members, excludeSet)
 		if !ok {
-			return domain.ErrorNoCandidate
+			return domain.ErrNoCandidate
 		}
 
 		if !algo.ReplaceOnce(pr.AssignedReviewers, oldUser.UserID, newReviewerID) {
-			return domain.ErrorInternal
+			return domain.ErrInternal
 		}
 
 		err = prRepo.Update(ctx, &pr)
@@ -204,7 +204,7 @@ func (s *Service) CreateTeam(ctx context.Context, team *domain.Team) (*domain.Te
 		return nil
 	}); err != nil {
 		if errors.Is(err, storage.ErrAlreadyExists) {
-			return nil, domain.ErrorTeamExists
+			return nil, domain.ErrTeamExists
 		}
 		return nil, s.formatError(op, err)
 	}
@@ -236,7 +236,7 @@ func (s *Service) GetReviewerAssignments(ctx context.Context, userID string) (*d
 		_, err = tx.UserRepo().GetByID(ctx, userID)
 		if err != nil {
 			if errors.Is(err, storage.ErrNotFound) {
-				return domain.ErrorResourceNotFound
+				return domain.ErrResourceNotFound
 			}
 			return err
 		}

@@ -21,7 +21,8 @@ func NewServer(service domain.AssignmentService) *Server {
 	}
 }
 
-func (s *Server) PostPullRequestCreate(ctx context.Context, request generated.PostPullRequestCreateRequestObject) (generated.PostPullRequestCreateResponseObject, error) {
+func (s *Server) PostPullRequestCreate(ctx context.Context, request generated.PostPullRequestCreateRequestObject) (
+	generated.PostPullRequestCreateResponseObject, error) {
 	if request.Body == nil {
 		return nil, echo.NewHTTPError(http.StatusBadRequest, "request body is required")
 	}
@@ -44,7 +45,8 @@ func (s *Server) PostPullRequestCreate(ctx context.Context, request generated.Po
 	return generated.PostPullRequestCreate201JSONResponse{Pr: &prPayload}, nil
 }
 
-func (s *Server) PostPullRequestMerge(ctx context.Context, request generated.PostPullRequestMergeRequestObject) (generated.PostPullRequestMergeResponseObject, error) {
+func (s *Server) PostPullRequestMerge(ctx context.Context, request generated.PostPullRequestMergeRequestObject) (
+	generated.PostPullRequestMergeResponseObject, error) {
 	if request.Body == nil {
 		return nil, echo.NewHTTPError(http.StatusBadRequest, "request body is required")
 	}
@@ -65,7 +67,8 @@ func (s *Server) PostPullRequestMerge(ctx context.Context, request generated.Pos
 	return generated.PostPullRequestMerge200JSONResponse{Pr: &prPayload}, nil
 }
 
-func (s *Server) PostPullRequestReassign(ctx context.Context, request generated.PostPullRequestReassignRequestObject) (generated.PostPullRequestReassignResponseObject, error) {
+func (s *Server) PostPullRequestReassign(ctx context.Context, request generated.PostPullRequestReassignRequestObject) (
+	generated.PostPullRequestReassignResponseObject, error) {
 	if request.Body == nil {
 		return nil, echo.NewHTTPError(http.StatusBadRequest, "request body is required")
 	}
@@ -90,7 +93,8 @@ func (s *Server) PostPullRequestReassign(ctx context.Context, request generated.
 	}, nil
 }
 
-func (s *Server) PostTeamAdd(ctx context.Context, request generated.PostTeamAddRequestObject) (generated.PostTeamAddResponseObject, error) {
+func (s *Server) PostTeamAdd(ctx context.Context, request generated.PostTeamAddRequestObject) (
+	generated.PostTeamAddResponseObject, error) {
 	if request.Body == nil {
 		return nil, echo.NewHTTPError(http.StatusBadRequest, "request body is required")
 	}
@@ -111,7 +115,8 @@ func (s *Server) PostTeamAdd(ctx context.Context, request generated.PostTeamAddR
 	}, nil
 }
 
-func (s *Server) GetTeamGet(ctx context.Context, request generated.GetTeamGetRequestObject) (generated.GetTeamGetResponseObject, error) {
+func (s *Server) GetTeamGet(ctx context.Context, request generated.GetTeamGetRequestObject) (
+	generated.GetTeamGetResponseObject, error) {
 	team, err := s.service.GetTeam(ctx, request.Params.TeamName)
 	if err != nil {
 		if resp, err := s.handleGetTeamGetError(err); err != nil || resp != nil {
@@ -124,11 +129,12 @@ func (s *Server) GetTeamGet(ctx context.Context, request generated.GetTeamGetReq
 	return generated.GetTeamGet200JSONResponse(teamPayload), nil
 }
 
-func (s *Server) GetUsersGetReview(ctx context.Context, request generated.GetUsersGetReviewRequestObject) (generated.GetUsersGetReviewResponseObject, error) {
+func (s *Server) GetUsersGetReview(ctx context.Context, request generated.GetUsersGetReviewRequestObject) (
+	generated.GetUsersGetReviewResponseObject, error) {
 	result, err := s.service.GetReviewerAssignments(ctx, request.Params.UserId)
 	if err != nil {
-		if resp, err := s.handleGetUsersGetReviewError(err); err != nil || resp != nil {
-			return resp, err
+		if err := s.handleGetUsersGetReviewError(err); err != nil {
+			return nil, err
 		}
 		return nil, err
 	}
@@ -139,7 +145,8 @@ func (s *Server) GetUsersGetReview(ctx context.Context, request generated.GetUse
 	}, nil
 }
 
-func (s *Server) PostUsersSetIsActive(ctx context.Context, request generated.PostUsersSetIsActiveRequestObject) (generated.PostUsersSetIsActiveResponseObject, error) {
+func (s *Server) PostUsersSetIsActive(ctx context.Context, request generated.PostUsersSetIsActiveRequestObject) (
+	generated.PostUsersSetIsActiveResponseObject, error) {
 	if request.Body == nil {
 		return nil, echo.NewHTTPError(http.StatusBadRequest, "request body is required")
 	}
@@ -197,7 +204,7 @@ func (s *Server) handlePostPullRequestMergeError(err error) (generated.PostPullR
 	}
 }
 
-func (s *Server) handlePostPullRequestReassignError(err error) (generated.PostPullRequestReassignResponseObject, error) {
+func (s *Server) handlePostPullRequestReassignError(err error) (generated.PostPullRequestReassignResponseObject, error) { //nolint:lll
 	appErr, err := unwrapDomainError(err)
 	if err != nil || appErr == nil {
 		return nil, err
@@ -247,14 +254,14 @@ func (s *Server) handleGetTeamGetError(err error) (generated.GetTeamGetResponseO
 	}
 }
 
-func (s *Server) handleGetUsersGetReviewError(err error) (generated.GetUsersGetReviewResponseObject, error) {
+func (s *Server) handleGetUsersGetReviewError(err error) error {
 	appErr, err := unwrapDomainError(err)
 	if err != nil || appErr == nil {
-		return nil, err
+		return err
 	}
 
 	payload := makeErrorPayload(appErr)
-	return nil, echo.NewHTTPError(payload.status, payload.body)
+	return echo.NewHTTPError(payload.status, payload.body)
 }
 
 func (s *Server) handlePostUsersSetIsActiveError(err error) (generated.PostUsersSetIsActiveResponseObject, error) {
@@ -293,7 +300,7 @@ func unwrapDomainError(err error) (*domain.Error, error) {
 }
 
 func toGeneratedPullRequest(pr *domain.PullRequest) generated.PullRequest {
-	reviewers := append([]string(nil), pr.AssignedReviewers...)
+	reviewers := append([]string{}, pr.AssignedReviewers...)
 
 	return generated.PullRequest{
 		AssignedReviewers: reviewers,

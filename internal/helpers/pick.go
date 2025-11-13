@@ -19,7 +19,7 @@ func PickReviewers(candidates []domain.TeamMember, skip algo.Set[string]) []stri
 	second := -1
 
 	for attempts := 0; attempts < maxAttempts && (first == -1 || second == -1); attempts++ {
-		i := rand.Intn(n)
+		i := rand.Intn(n) //nolint:gosec
 		c := candidates[i]
 
 		if i == first || !c.IsActive || skip.Has(c.UserID) {
@@ -56,6 +56,6 @@ func ReplaceReviewer(candidates []domain.TeamMember, skip algo.Set[string]) (out
 		return "", false
 	}
 
-	i := rand.Intn(len(filtered))
+	i := rand.Intn(len(filtered)) //nolint:gosec
 	return filtered[i].UserID, true
 }

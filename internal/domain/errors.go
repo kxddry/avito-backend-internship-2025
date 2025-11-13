@@ -2,7 +2,6 @@ package domain
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 )
 
@@ -35,15 +34,15 @@ type Error struct {
 	Err     error
 }
 
-// ... i did not want to hardcode this. but your specification forces me to do so ...
+// I did not want to hardcode this. but your specification forces me to do so.
 var (
-	ErrorPullRequestExists      = NewError(http.StatusConflict, ErrorCodePullRequestExists, string(ErrorMessagePullRequestExists), nil)
-	ErrorResourceNotFound       = NewError(http.StatusNotFound, ErrorCodeNotFound, string(ErrorMessageResourceNotFound), nil)
-	ErrorTeamExists             = NewError(http.StatusBadRequest, ErrorCodeTeamExists, string(ErrorMessageTeamExists), nil)
-	ErrorInternal               = NewError(http.StatusInternalServerError, "INTERNAL_ERROR", "internal server error", nil)
-	ErrorCantReassignOnMergedPr = NewError(http.StatusConflict, ErrorCodePullRequestMerged, string(ErrorMessageReassignOnMerged), nil)
-	ErrorReviewerIsNotAssigned  = NewError(http.StatusConflict, ErrorCodeReviewerMissing, string(ErrorMessageReviewerIsNotAssigned), nil)
-	ErrorNoCandidate            = NewError(http.StatusConflict, ErrorCodeNoCandidate, string(ErrorMessageNoActiveReplacementCandidate), nil)
+	ErrPRExists         = NewError(http.StatusConflict, ErrorCodePullRequestExists, string(ErrorMessagePullRequestExists), nil)
+	ErrResourceNotFound = NewError(http.StatusNotFound, ErrorCodeNotFound, string(ErrorMessageResourceNotFound), nil)
+	ErrTeamExists       = NewError(http.StatusBadRequest, ErrorCodeTeamExists, string(ErrorMessageTeamExists), nil)
+	ErrInternal         = NewError(http.StatusInternalServerError, "INTERNAL_ERROR", "internal server error", nil)
+	ErrReassignOnMerged = NewError(http.StatusConflict, ErrorCodePullRequestMerged, string(ErrorMessageReassignOnMerged), nil)
+	ErrReviewerMissing  = NewError(http.StatusConflict, ErrorCodeReviewerMissing, string(ErrorMessageReviewerIsNotAssigned), nil)
+	ErrNoCandidate      = NewError(http.StatusConflict, ErrorCodeNoCandidate, string(ErrorMessageNoActiveReplacementCandidate), nil)
 )
 
 func IsDomainError(err error) bool {
@@ -59,7 +58,7 @@ func (e *Error) Error() string {
 	if e.Message != "" {
 		return e.Message
 	}
-	return fmt.Sprintf("%s", e.Code)
+	return string(e.Code)
 }
 
 func (e *Error) Unwrap() error {

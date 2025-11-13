@@ -72,10 +72,12 @@ func (a *Application) Run(ctx context.Context) error {
 	}
 }
 
+const defTimeout = 5 * time.Second
+
 func shutdownTimeout(cfg *Config) time.Duration {
 	timeout := cfg.ServerConfig.Timeout
 	if timeout <= 0 {
-		return 5 * time.Second
+		return defTimeout
 	}
 	return timeout
 }

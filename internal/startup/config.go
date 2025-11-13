@@ -30,24 +30,24 @@ func (c *Config) Validate() error {
 }
 
 type Config struct {
-	Debug        bool         `yaml:"debug" env:"DEBUG" env-default:"false"`
-	DBConfig     DBConfig     `yaml:"db" env-required:"true"`
-	ServerConfig ServerConfig `yaml:"server" env-required:"true"`
+	Debug        bool         `env:"DEBUG"         env-default:"false" yaml:"debug"`
+	DBConfig     DBConfig     `env-required:"true" yaml:"db"`
+	ServerConfig ServerConfig `env-required:"true" yaml:"server"`
 }
 
 type ServerConfig struct {
-	Port        uint16        `yaml:"port" env:"PORT" env-default:"8080"`
-	Timeout     time.Duration `yaml:"timeout" env:"TIMEOUT" env-default:"5s"`
-	IdleTimeout time.Duration `yaml:"idle_timeout" env:"IDLE_TIMEOUT" env-default:"30s"`
+	Port        uint16        `env:"PORT"         env-default:"8080" yaml:"port"`
+	Timeout     time.Duration `env:"TIMEOUT"      env-default:"5s"   yaml:"timeout"`
+	IdleTimeout time.Duration `env:"IDLE_TIMEOUT" env-default:"30s"  yaml:"idle_timeout"`
 }
 
 type DBConfig struct {
-	Host     string `yaml:"host" env-required:"true"`
-	Port     uint16 `yaml:"port" env-required:"true"`
-	User     string `yaml:"user" env-required:"true"`
-	Password string `env:"DB_PASSWORD" env-required:"true"`
-	DBName   string `yaml:"db_name" env-required:"true"`
-	SSLMode  string `yaml:"ssl_mode" env-required:"true"`
+	Host     string `env-required:"true" yaml:"host"`
+	Port     uint16 `env-required:"true" yaml:"port"`
+	User     string `env-required:"true" yaml:"user"`
+	Password string `env:"DB_PASSWORD"   env-required:"true"`
+	DBName   string `env-required:"true" yaml:"db_name"`
+	SSLMode  string `env-required:"true" yaml:"ssl_mode"`
 }
 
 func (d *DBConfig) DSN() string {

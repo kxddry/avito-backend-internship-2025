@@ -1,6 +1,6 @@
 package algo
 
-func ReplaceOnce[T comparable](slice []T, oldItem T, newItem T) bool {
+func ReplaceOnce[T comparable](slice []T, oldItem, newItem T) bool {
 	for i := range slice {
 		if slice[i] == oldItem {
 			slice[i] = newItem

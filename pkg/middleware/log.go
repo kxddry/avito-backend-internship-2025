@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -42,13 +43,13 @@ func Zerolog() echo.MiddlewareFunc {
 				Logger()
 
 			switch {
-			case status >= 500:
+			case status >= http.StatusInternalServerError:
 				if err != nil {
 					l.Error().Err(err).Msg(httpServer)
 				} else {
 					l.Error().Msg(httpServer)
 				}
-			case status >= 400:
+			case status >= http.StatusBadRequest:
 				if err != nil {
 					l.Warn().Err(err).Msg(httpServer)
 				} else {
