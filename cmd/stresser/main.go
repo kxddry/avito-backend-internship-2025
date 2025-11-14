@@ -11,6 +11,8 @@ import (
 	"net/http"
 	"sync"
 	"time"
+
+	zlog "github.com/rs/zerolog/log"
 )
 
 func main() {
@@ -128,8 +130,8 @@ func runWorker(workerID int, stopChan <-chan struct{}) {
 				setUserIsActive(rng)
 			case action < 90:
 				safeReassignPR(rng)
-			case action < 95:
-				getStats()
+			//case action < 95:
+			//	getStats() // getting stats is not a frequent operation
 			default:
 				deactivateTeam(rng)
 			}
@@ -156,6 +158,7 @@ func createPR(rng *rand.Rand) {
 
 	requestsTotal.Add(1)
 	if err != nil || resp.StatusCode != http.StatusCreated {
+		zlog.Error().Err(err).Msgf("Failed to create PR")
 		requestsFail.Add(1)
 		if resp != nil {
 			_ = resp.Body.Close()
@@ -190,6 +193,7 @@ func mergePR(rng *rand.Rand) {
 
 	requestsTotal.Add(1)
 	if err != nil || (resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNotFound) {
+		zlog.Error().Err(err).Msgf("Failed to merge PR")
 		requestsFail.Add(1)
 		if resp != nil {
 			_ = resp.Body.Close()
@@ -220,6 +224,7 @@ func reassignPR(rng *rand.Rand) {
 
 	requestsTotal.Add(1)
 	if err != nil {
+		zlog.Error().Err(err).Msgf("Failed to reassign PR")
 		requestsFail.Add(1)
 		return
 	}
@@ -228,6 +233,7 @@ func reassignPR(rng *rand.Rand) {
 	if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusConflict {
 		requestsOK.Add(1)
 	} else {
+		zlog.Error().Err(err).Msgf("Failed to reassign PR")
 		requestsFail.Add(1)
 	}
 }
@@ -245,6 +251,7 @@ func getUserReviews(rng *rand.Rand) {
 	requestsTotal.Add(1)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		requestsFail.Add(1)
+		zlog.Error().Err(err).Msgf("Failed to get user reviews")
 		if resp != nil {
 			_ = resp.Body.Close()
 		}
@@ -267,6 +274,7 @@ func getTeam(rng *rand.Rand) {
 	requestsTotal.Add(1)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		requestsFail.Add(1)
+		zlog.Error().Err(err).Msgf("Failed to get team")
 		if resp != nil {
 			_ = resp.Body.Close()
 		}
@@ -292,6 +300,7 @@ func setUserIsActive(rng *rand.Rand) {
 
 	requestsTotal.Add(1)
 	if err != nil || (resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNotFound) {
+		zlog.Error().Err(err).Msgf("Failed to set user isActive")
 		requestsFail.Add(1)
 		if resp != nil {
 			_ = resp.Body.Close()
@@ -319,6 +328,7 @@ func safeReassignPR(rng *rand.Rand) {
 	requestsTotal.Add(1)
 	if err != nil || (resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNotFound) {
 		requestsFail.Add(1)
+		zlog.Error().Err(err).Msgf("Failed to safe reassign PR")
 		if resp != nil {
 			_ = resp.Body.Close()
 		}
@@ -332,7 +342,9 @@ func getStats() {
 	resp, err := http.Get(*baseURL + "/stats")
 
 	requestsTotal.Add(1)
+
 	if err != nil || resp.StatusCode != http.StatusOK {
+		zlog.Error().Err(err).Msgf("Failed to get stats")
 		requestsFail.Add(1)
 		if resp != nil {
 			_ = resp.Body.Close()
@@ -355,6 +367,7 @@ func deactivateTeam(rng *rand.Rand) {
 
 	requestsTotal.Add(1)
 	if err != nil || (resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNotFound) {
+		zlog.Error().Err(err).Msgf("Failed to deactivate team")
 		requestsFail.Add(1)
 		if resp != nil {
 			_ = resp.Body.Close()
