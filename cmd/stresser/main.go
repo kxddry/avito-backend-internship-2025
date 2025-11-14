@@ -29,7 +29,7 @@ func main() {
 	stopChan := make(chan struct{})
 
 	var wg sync.WaitGroup
-	for i := 0; i < *workers; i++ {
+	for i := range *workers {
 		wg.Add(1)
 		go func(workerID int) {
 			defer wg.Done()
@@ -61,7 +61,7 @@ func setupInitialData() error {
 
 	for _, teamName := range teamNames {
 		members := make([]TeamMember, 0)
-		for i := 0; i < 40; i++ {
+		for i := range 40 {
 			userID := fmt.Sprintf("%s-u%d", teamName, i)
 			userIDs = append(userIDs, userID)
 			members = append(members, TeamMember{
@@ -106,7 +106,7 @@ func createTeam(team Team) error {
 }
 
 func runWorker(workerID int, stopChan <-chan struct{}) {
-	rng := rand.New(rand.NewSource(time.Now().UnixNano() + int64(workerID)))
+	rng := rand.New(rand.NewSource(time.Now().UnixNano() + int64(workerID))) //nolint:gosec
 
 	for {
 		select {
@@ -149,7 +149,7 @@ func createPR(rng *rand.Rand) {
 
 	req := CreatePRRequest{
 		PullRequestID:   prID,
-		PullRequestName: fmt.Sprintf("Feature %s", prID),
+		PullRequestName: "Feature " + prID,
 		AuthorID:        authorID,
 	}
 
@@ -246,7 +246,7 @@ func getUserReviews(rng *rand.Rand) {
 	userID := userIDs[rng.Intn(len(userIDs))]
 	url := fmt.Sprintf("%s/users/getReview?user_id=%s", *baseURL, userID)
 
-	resp, err := http.Get(url)
+	resp, err := http.Get(url) //nolint:gosec
 
 	requestsTotal.Add(1)
 	if err != nil || resp.StatusCode != http.StatusOK {
@@ -269,6 +269,7 @@ func getTeam(rng *rand.Rand) {
 	teamName := teamNames[rng.Intn(len(teamNames))]
 	url := fmt.Sprintf("%s/team/get?team_name=%s", *baseURL, teamName)
 
+	//nolint:gosec
 	resp, err := http.Get(url)
 
 	requestsTotal.Add(1)
@@ -363,6 +364,7 @@ func deactivateTeam(rng *rand.Rand) {
 	teamName := teamNames[rng.Intn(len(teamNames))]
 	url := fmt.Sprintf("%s/teams/%s/deactivate", *baseURL, teamName)
 
+	//nolint:gosec
 	resp, err := http.Post(url, "application/json", nil)
 
 	requestsTotal.Add(1)

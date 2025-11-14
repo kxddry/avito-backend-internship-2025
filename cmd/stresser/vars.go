@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+//nolint:gochecknoglobals
 var (
 	baseURL       = flag.String("url", "http://localhost:8080", "Base URL of the service")
 	duration      = flag.Duration("duration", 60*time.Second, "Test duration")
