@@ -1,11 +1,10 @@
 debug: false
 
 db:
-  host: "localhost"
+  host: "postgres"
   port: 5432
-  user: "root"
-#  password: "supersecret" # password is in DB_PASSWORD
-  db_name: "my_db"
+  user: "db_user"
+  db_name: "avito_db"
   ssl_mode: "disable"
 
 server:
