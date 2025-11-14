@@ -58,36 +58,12 @@ func (s *Service) CreatePullRequest(outerCtx context.Context, input *domain.Crea
 	const op = "service.CreatePullRequest"
 	var pr *domain.PullRequest
 	err := s.txmgr.Do(outerCtx, func(ctx context.Context, tx storage.Tx) error {
-		prRepo := tx.PullRequestRepo()
-		_, err := prRepo.GetByID(ctx, input.PullRequestID)
-		if err == nil {
-			return storage.ErrAlreadyExists
-		}
-		if !errors.Is(err, storage.ErrNotFound) {
-			return err
-		}
-
-		user, err := tx.UserRepo().GetByID(ctx, input.AuthorID)
+		prOut, err := tx.PullRequestRepo().Create(ctx, input)
 		if err != nil {
 			return err
 		}
-
-		team, err := tx.TeamRepo().GetByName(ctx, user.TeamName)
-		if err != nil {
-			return err
-		}
-
-		reviewers := helpers.PickReviewers(team.Members, algo.SetFrom(input.AuthorID))
-
-		pr = &domain.PullRequest{
-			ID:                input.PullRequestID,
-			Name:              input.PullRequestName,
-			AuthorID:          input.AuthorID,
-			AssignedReviewers: reviewers,
-			Status:            domain.PullRequestStatusOpen,
-		}
-
-		return prRepo.Create(ctx, pr)
+		pr = &prOut
+		return nil
 	})
 
 	if err != nil {

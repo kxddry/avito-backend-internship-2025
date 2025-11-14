@@ -25,7 +25,7 @@ func GetTx(ctx context.Context) (pgx.Tx, bool) {
 
 // PullRequestRepository is the repository for pull requests.
 type PullRequestRepository interface {
-	Create(ctx context.Context, pr *domain.PullRequest) error
+	Create(ctx context.Context, pr *domain.CreatePullRequestInput) (domain.PullRequest, error)
 	GetByID(ctx context.Context, pullRequestID string) (domain.PullRequest, error)
 	GetPRAssignments(ctx context.Context, reviewerID string) ([]domain.PullRequestShort, error)
 	Update(ctx context.Context, pr *domain.PullRequest) error

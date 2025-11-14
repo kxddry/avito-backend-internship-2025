@@ -91,7 +91,7 @@ func cleanupTestData(t *testing.T) {
 func TestE2E_TeamFlow(t *testing.T) {
 	cleanupTestData(t)
 
-	t.Run("Create Team", func(t *testing.T) {
+	t.Run("CreateOld Team", func(t *testing.T) {
 		team := generated.Team{
 			TeamName: "backend-team",
 			Members: []generated.TeamMember{
@@ -109,7 +109,7 @@ func TestE2E_TeamFlow(t *testing.T) {
 		defer func() { _ = resp.Body.Close() }()
 
 		if resp.StatusCode != http.StatusCreated {
-			t.Errorf("Create team status = %d, want %d", resp.StatusCode, http.StatusCreated)
+			t.Errorf("CreateOld team status = %d, want %d", resp.StatusCode, http.StatusCreated)
 		}
 
 		var result struct {
@@ -148,7 +148,7 @@ func TestE2E_TeamFlow(t *testing.T) {
 		}
 	})
 
-	t.Run("Create Duplicate Team", func(t *testing.T) {
+	t.Run("CreateOld Duplicate Team", func(t *testing.T) {
 		team := generated.Team{
 			TeamName: "backend-team",
 			Members:  []generated.TeamMember{},
@@ -162,7 +162,7 @@ func TestE2E_TeamFlow(t *testing.T) {
 		defer func() { _ = resp.Body.Close() }()
 
 		if resp.StatusCode != http.StatusBadRequest {
-			t.Errorf("Create duplicate team status = %d, want %d", resp.StatusCode, http.StatusBadRequest)
+			t.Errorf("CreateOld duplicate team status = %d, want %d", resp.StatusCode, http.StatusBadRequest)
 		}
 	})
 }
@@ -187,7 +187,7 @@ func TestE2E_PullRequestFlow(t *testing.T) {
 	}
 	_ = resp.Body.Close()
 
-	t.Run("Create Pull Request", func(t *testing.T) {
+	t.Run("CreateOld Pull Request", func(t *testing.T) {
 		prInput := map[string]string{
 			"pull_request_id":   "pr-1",
 			"pull_request_name": "Add feature X",
@@ -202,7 +202,7 @@ func TestE2E_PullRequestFlow(t *testing.T) {
 		defer func() { _ = resp.Body.Close() }()
 
 		if resp.StatusCode != http.StatusCreated {
-			t.Errorf("Create PR status = %d, want %d", resp.StatusCode, http.StatusCreated)
+			t.Errorf("CreateOld PR status = %d, want %d", resp.StatusCode, http.StatusCreated)
 		}
 
 		var result struct {
@@ -505,7 +505,7 @@ func TestE2E_ErrorCases(t *testing.T) {
 		}
 	})
 
-	t.Run("Create PR with Non-Existing Author", func(t *testing.T) {
+	t.Run("CreateOld PR with Non-Existing Author", func(t *testing.T) {
 		prInput := map[string]string{
 			"pull_request_id":   "pr-bad",
 			"pull_request_name": "Bad PR",
@@ -520,7 +520,7 @@ func TestE2E_ErrorCases(t *testing.T) {
 		defer func() { _ = resp.Body.Close() }()
 
 		if resp.StatusCode != http.StatusNotFound {
-			t.Errorf("Create PR with bad author status = %d, want %d", resp.StatusCode, http.StatusNotFound)
+			t.Errorf("CreateOld PR with bad author status = %d, want %d", resp.StatusCode, http.StatusNotFound)
 		}
 	})
 

@@ -24,8 +24,26 @@ func New(pool *pgxpool.Pool) *Repository {
 	return &Repository{pool: pool}
 }
 
-// Create creates a new pull request.
-func (r *Repository) Create(ctx context.Context, pr *domain.PullRequest) error {
+func (r *Repository) Create(ctx context.Context, pr *domain.CreatePullRequestInput) (domain.PullRequest, error) {
+	q := r.getQuerier(ctx)
+
+	var prOut domain.PullRequest
+
+	if err := q.QueryRow(ctx, createPRQuery, pr.AuthorID, pr.PullRequestID, pr.PullRequestName).Scan(
+		&prOut.ID, &prOut.Name, &prOut.AuthorID, &prOut.Status, &prOut.CreatedAt, &prOut.AssignedReviewers, &prOut.MergedAt,
+	); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) || storage.IsUniqueViolation(err) {
+			return domain.PullRequest{}, storage.ErrAlreadyExists
+		}
+		return domain.PullRequest{}, err
+	}
+
+	return prOut, nil
+}
+
+// CreateOld creates a new pull request.
+// Deprecated: use Create instead.
+func (r *Repository) CreateOld(ctx context.Context, pr *domain.PullRequest) error {
 	q := r.getQuerier(ctx)
 
 	var (
@@ -33,7 +51,7 @@ func (r *Repository) Create(ctx context.Context, pr *domain.PullRequest) error {
 		mergedAt  *time.Time
 	)
 
-	if err := q.QueryRow(ctx, createPRQuery, pr.ID, pr.Name, pr.AuthorID, string(pr.Status),
+	if err := q.QueryRow(ctx, createPROldQuery, pr.ID, pr.Name, pr.AuthorID, string(pr.Status),
 		pr.AssignedReviewers, pr.MergedAt,
 	).Scan(&createdAt, &mergedAt); err != nil {
 		if storage.IsUniqueViolation(err) {

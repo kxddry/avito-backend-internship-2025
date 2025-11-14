@@ -3,6 +3,8 @@ package pullrequests
 import _ "embed" // embed package is used to embed SQL query files
 
 var (
+	//go:embed queries/create_old.sql
+	createPROldQuery string // deprecated
 	//go:embed queries/create.sql
 	createPRQuery string
 	//go:embed queries/get_by_id.sql

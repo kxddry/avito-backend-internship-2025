@@ -250,7 +250,7 @@ func TestPullRequestRepository_Integration(t *testing.T) {
 		t.Fatalf("Failed to create users: %v", err)
 	}
 
-	t.Run("Create and Get PR", func(t *testing.T) {
+	t.Run("CreateOld and Get PR", func(t *testing.T) {
 		pr := &domain.PullRequest{
 			ID:                "pr-1",
 			Name:              "Test PR",
@@ -259,14 +259,14 @@ func TestPullRequestRepository_Integration(t *testing.T) {
 			AssignedReviewers: []string{"reviewer1", "reviewer2"},
 		}
 
-		err := prRepo.Create(ctx, pr)
+		err := prRepo.CreateOld(ctx, pr)
 		if err != nil {
-			t.Fatalf("Create() error = %v", err)
+			t.Fatalf("CreateOld() error = %v", err)
 		}
 
 		// Verify CreatedAt was set
 		if pr.CreatedAt == nil {
-			t.Error("Create() did not set CreatedAt")
+			t.Error("CreateOld() did not set CreatedAt")
 		}
 
 		// Get PR
@@ -299,9 +299,9 @@ func TestPullRequestRepository_Integration(t *testing.T) {
 			AssignedReviewers: []string{"reviewer1"},
 		}
 
-		err := prRepo.Create(ctx, pr)
+		err := prRepo.CreateOld(ctx, pr)
 		if err != nil {
-			t.Fatalf("Create() error = %v", err)
+			t.Fatalf("CreateOld() error = %v", err)
 		}
 
 		// Update to merged
@@ -350,6 +350,8 @@ func TestPullRequestRepository_Integration(t *testing.T) {
 		for _, pr := range prs {
 			if err := prRepo.Create(ctx, pr); err != nil {
 				t.Fatalf("Create() error = %v", err)
+			if err := prRepo.CreateOld(ctx, pr); err != nil {
+				t.Fatalf("CreateOld() error = %v", err)
 			}
 		}
 
@@ -364,7 +366,7 @@ func TestPullRequestRepository_Integration(t *testing.T) {
 		}
 	})
 
-	t.Run("Create Duplicate PR", func(t *testing.T) {
+	t.Run("CreateOld Duplicate PR", func(t *testing.T) {
 		pr := &domain.PullRequest{
 			ID:                "pr-duplicate",
 			Name:              "Duplicate PR",
@@ -373,18 +375,18 @@ func TestPullRequestRepository_Integration(t *testing.T) {
 			AssignedReviewers: []string{},
 		}
 
-		err := prRepo.Create(ctx, pr)
+		err := prRepo.CreateOld(ctx, pr)
 		if err != nil {
-			t.Fatalf("Create() error = %v", err)
+			t.Fatalf("CreateOld() error = %v", err)
 		}
 
-		err = prRepo.Create(ctx, pr)
+		err = prRepo.CreateOld(ctx, pr)
 		if err == nil {
-			t.Error("Create() should return error for duplicate PR")
+			t.Error("CreateOld() should return error for duplicate PR")
 		}
 
 		if err != storage.ErrAlreadyExists {
-			t.Errorf("Create() error = %v, want ErrAlreadyExists", err)
+			t.Errorf("CreateOld() error = %v, want ErrAlreadyExists", err)
 		}
 	})
 }
