@@ -9,4 +9,6 @@ var (
 	getTeamQuery string
 	//go:embed queries/get_members.sql
 	getTeamMembersQuery string
+	//go:embed queries/get_stats.sql
+	getTeamStatsQuery string
 )

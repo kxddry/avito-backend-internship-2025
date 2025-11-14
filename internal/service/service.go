@@ -39,12 +39,14 @@ func New(deps Dependencies) *Service {
 var _ domain.AssignmentService = (*Service)(nil)
 
 // formatError formats an error.
-func (s *Service) formatError(op string, err error) error {
+func (s *Service) formatError(ctx context.Context, op string, err error) error {
 	switch {
 	case errors.Is(err, storage.ErrNotFound):
 		return domain.ErrResourceNotFound
 	case domain.IsDomainError(err):
 		return err
+	case errors.Is(err, ctx.Err()):
+		return ctx.Err()
 	default:
 		log.Error().Err(err).Str("operation", op).Msg("operation failed")
 		return domain.ErrInternal
@@ -52,10 +54,10 @@ func (s *Service) formatError(op string, err error) error {
 }
 
 // CreatePullRequest creates a new pull request.
-func (s *Service) CreatePullRequest(ctx context.Context, input *domain.CreatePullRequestInput) (*domain.PullRequest, error) { //nolint:lll
+func (s *Service) CreatePullRequest(outerCtx context.Context, input *domain.CreatePullRequestInput) (*domain.PullRequest, error) { //nolint:lll
 	const op = "service.CreatePullRequest"
 	var pr *domain.PullRequest
-	err := s.txmgr.Do(ctx, func(ctx context.Context, tx storage.Tx) error {
+	err := s.txmgr.Do(outerCtx, func(ctx context.Context, tx storage.Tx) error {
 		prRepo := tx.PullRequestRepo()
 		_, err := prRepo.GetByID(ctx, input.PullRequestID)
 		if err == nil {
@@ -92,16 +94,16 @@ func (s *Service) CreatePullRequest(ctx context.Context, input *domain.CreatePul
 		if errors.Is(err, storage.ErrAlreadyExists) {
 			return nil, domain.ErrPRExists
 		}
-		return nil, s.formatError(op, err)
+		return nil, s.formatError(outerCtx, op, err)
 	}
 	return pr, nil
 }
 
 // MergePullRequest merges a pull request.
-func (s *Service) MergePullRequest(ctx context.Context, input *domain.MergePullRequestInput) (*domain.PullRequest, error) { //nolint:lll
+func (s *Service) MergePullRequest(outerCtx context.Context, input *domain.MergePullRequestInput) (*domain.PullRequest, error) { //nolint:lll
 	const op = "service.MergePullRequest"
 	var pr *domain.PullRequest
-	err := s.txmgr.Do(ctx, func(ctx context.Context, tx storage.Tx) error {
+	err := s.txmgr.Do(outerCtx, func(ctx context.Context, tx storage.Tx) error {
 		prRepo := tx.PullRequestRepo()
 		pr2, err := prRepo.GetByID(ctx, input.PullRequestID)
 		if err != nil {
@@ -124,16 +126,16 @@ func (s *Service) MergePullRequest(ctx context.Context, input *domain.MergePullR
 	})
 
 	if err != nil {
-		return nil, s.formatError(op, err)
+		return nil, s.formatError(outerCtx, op, err)
 	}
 	return pr, nil
 }
 
 // ReassignPullRequest reassigns a pull request.
-func (s *Service) ReassignPullRequest(ctx context.Context, input *domain.ReassignPullRequestInput) (*domain.ReassignPullRequestResult, error) { //nolint:lll
+func (s *Service) ReassignPullRequest(outerCtx context.Context, input *domain.ReassignPullRequestInput) (*domain.ReassignPullRequestResult, error) { //nolint:lll
 	const op = "service.ReassignPullRequest"
 	var result *domain.ReassignPullRequestResult
-	if err := s.txmgr.Do(ctx, func(ctx context.Context, tx storage.Tx) error {
+	if err := s.txmgr.Do(outerCtx, func(ctx context.Context, tx storage.Tx) error {
 		oldUser, err := tx.UserRepo().GetByID(ctx, input.OldUserID)
 		if err != nil {
 			return err
@@ -180,7 +182,7 @@ func (s *Service) ReassignPullRequest(ctx context.Context, input *domain.Reassig
 		return nil
 
 	}); err != nil {
-		return nil, s.formatError(op, err)
+		return nil, s.formatError(outerCtx, op, err)
 	}
 	return result, nil
 }
@@ -200,9 +202,9 @@ func transformMembersToUsers(teamName string, members []domain.TeamMember) []dom
 }
 
 // CreateTeam creates a new team.
-func (s *Service) CreateTeam(ctx context.Context, team *domain.Team) (*domain.Team, error) {
+func (s *Service) CreateTeam(outerCtx context.Context, team *domain.Team) (*domain.Team, error) {
 	const op = "service.CreateTeam"
-	if err := s.txmgr.Do(ctx, func(ctx context.Context, tx storage.Tx) error {
+	if err := s.txmgr.Do(outerCtx, func(ctx context.Context, tx storage.Tx) error {
 		if err := tx.TeamRepo().Create(ctx, team); err != nil {
 			return err
 		}
@@ -215,17 +217,17 @@ func (s *Service) CreateTeam(ctx context.Context, team *domain.Team) (*domain.Te
 		if errors.Is(err, storage.ErrAlreadyExists) {
 			return nil, domain.ErrTeamExists
 		}
-		return nil, s.formatError(op, err)
+		return nil, s.formatError(outerCtx, op, err)
 	}
 
 	return team, nil
 }
 
 // GetTeam gets a team by name.
-func (s *Service) GetTeam(ctx context.Context, teamName string) (*domain.Team, error) {
+func (s *Service) GetTeam(outerCtx context.Context, teamName string) (*domain.Team, error) {
 	const op = "service.GetTeam"
 	var result *domain.Team
-	if err := s.txmgr.Do(ctx, func(ctx context.Context, tx storage.Tx) error {
+	if err := s.txmgr.Do(outerCtx, func(ctx context.Context, tx storage.Tx) error {
 		team, err := tx.TeamRepo().GetByName(ctx, teamName)
 		if err != nil {
 			return err
@@ -233,17 +235,17 @@ func (s *Service) GetTeam(ctx context.Context, teamName string) (*domain.Team, e
 		result = &team
 		return nil
 	}); err != nil {
-		return nil, s.formatError(op, err)
+		return nil, s.formatError(outerCtx, op, err)
 	}
 	return result, nil
 }
 
 // GetReviewerAssignments gets the reviewer assignments for a user.
-func (s *Service) GetReviewerAssignments(ctx context.Context, userID string) (*domain.ReviewerAssignments, error) {
+func (s *Service) GetReviewerAssignments(outerCtx context.Context, userID string) (*domain.ReviewerAssignments, error) {
 	const op = "service.GetReviewerAssignments"
 	result := &domain.ReviewerAssignments{UserID: userID, PullRequests: []domain.PullRequestShort{}}
 
-	if err := s.txmgr.Do(ctx, func(ctx context.Context, tx storage.Tx) (err error) {
+	if err := s.txmgr.Do(outerCtx, func(ctx context.Context, tx storage.Tx) (err error) {
 		_, err = tx.UserRepo().GetByID(ctx, userID)
 		if err != nil {
 			if errors.Is(err, storage.ErrNotFound) {
@@ -262,16 +264,16 @@ func (s *Service) GetReviewerAssignments(ctx context.Context, userID string) (*d
 		if errors.Is(err, storage.ErrNotFound) {
 			return result, nil
 		}
-		return nil, s.formatError(op, err)
+		return nil, s.formatError(outerCtx, op, err)
 	}
 	return result, nil
 }
 
 // SetUserIsActive sets the active status of a user.
-func (s *Service) SetUserIsActive(ctx context.Context, input *domain.SetUserIsActiveInput) (*domain.User, error) {
+func (s *Service) SetUserIsActive(outerCtx context.Context, input *domain.SetUserIsActiveInput) (*domain.User, error) {
 	const op = "service.SetUserIsActive"
 	var user *domain.User
-	if err := s.txmgr.Do(ctx, func(ctx context.Context, tx storage.Tx) error {
+	if err := s.txmgr.Do(outerCtx, func(ctx context.Context, tx storage.Tx) error {
 		userRepo := tx.UserRepo()
 		user2, err := userRepo.GetByID(ctx, input.UserID)
 		if err != nil {
@@ -285,7 +287,133 @@ func (s *Service) SetUserIsActive(ctx context.Context, input *domain.SetUserIsAc
 		user = &user2
 		return nil
 	}); err != nil {
-		return nil, s.formatError(op, err)
+		return nil, s.formatError(outerCtx, op, err)
 	}
 	return user, nil
+}
+
+// DeactivateTeam deactivates all users in a team.
+func (s *Service) DeactivateTeam(outerCtx context.Context, teamName string) (int, error) {
+	const op = "service.DeactivateTeam"
+	var count int
+	if err := s.txmgr.Do(outerCtx, func(ctx context.Context, tx storage.Tx) error {
+		team, err := tx.TeamRepo().GetByName(ctx, teamName)
+		if err != nil {
+			return err
+		}
+
+		users := transformMembersToUsers(team.Name, team.Members)
+		for i := range users {
+			users[i].IsActive = false
+		}
+
+		if err := tx.UserRepo().UpsertBatch(ctx, users); err != nil {
+			return err
+		}
+
+		count = len(users)
+		return nil
+	}); err != nil {
+		return 0, s.formatError(outerCtx, op, err)
+	}
+	return count, nil
+}
+
+// SafeReassignPR safely reassigns inactive reviewers on an open PR.
+func (s *Service) SafeReassignPR(outerCtx context.Context, prID string) (*domain.PullRequest, error) {
+	const op = "service.SafeReassignPR"
+	var pr *domain.PullRequest
+	if err := s.txmgr.Do(outerCtx, func(ctx context.Context, tx storage.Tx) error {
+		prRepo := tx.PullRequestRepo()
+		pr2, err := prRepo.GetByID(ctx, prID)
+		if err != nil {
+			return err
+		}
+
+		if pr2.Status != domain.PullRequestStatusOpen {
+			pr = &pr2
+			return nil
+		}
+
+		author, err := tx.UserRepo().GetByID(ctx, pr2.AuthorID)
+		if err != nil {
+			return err
+		}
+
+		team, err := tx.TeamRepo().GetByName(ctx, author.TeamName)
+		if err != nil {
+			return err
+		}
+
+		needUpdate := false
+		newReviewers := make([]string, 0, len(pr2.AssignedReviewers))
+
+		for _, reviewerID := range pr2.AssignedReviewers {
+			reviewer, err := tx.UserRepo().GetByID(ctx, reviewerID)
+			if err != nil {
+				if errors.Is(err, storage.ErrNotFound) {
+					needUpdate = true
+					continue
+				}
+				return err
+			}
+
+			if !reviewer.IsActive {
+				needUpdate = true
+				excludeSet := algo.SetFrom(pr2.AssignedReviewers...)
+				excludeSet.Add(pr2.AuthorID)
+				if newReviewerID, ok := helpers.ReplaceReviewer(team.Members, excludeSet); ok {
+					newReviewers = append(newReviewers, newReviewerID)
+					excludeSet.Add(newReviewerID)
+				}
+			} else {
+				newReviewers = append(newReviewers, reviewerID)
+			}
+		}
+
+		if needUpdate {
+			pr2.AssignedReviewers = newReviewers
+			if err := prRepo.Update(ctx, &pr2); err != nil {
+				return err
+			}
+		}
+
+		pr = &pr2
+		return nil
+	}); err != nil {
+		return nil, s.formatError(outerCtx, op, err)
+	}
+	return pr, nil
+}
+
+// GetStats returns statistics about the system.
+func (s *Service) GetStats(outerCtx context.Context) (*domain.Stats, error) {
+	const op = "service.GetStats"
+	stats := &domain.Stats{}
+
+	if err := s.txmgr.Do(outerCtx, func(ctx context.Context, tx storage.Tx) error {
+		userStats, err := tx.UserRepo().GetStats(ctx)
+		if err != nil {
+			return err
+		}
+		stats.Users = *userStats
+
+		prStats, err := tx.PullRequestRepo().GetStats(ctx)
+		if err != nil {
+			return err
+		}
+		stats.PRs = *prStats
+
+		teamStats, err := tx.TeamRepo().GetStats(ctx)
+		if err != nil {
+			return err
+		}
+		stats.Teams = *teamStats
+
+		return nil
+	}); err != nil {
+		return nil, s.formatError(outerCtx, op, err)
+	}
+
+	return stats, nil
 }

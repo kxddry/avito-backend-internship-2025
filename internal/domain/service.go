@@ -11,4 +11,7 @@ type AssignmentService interface {
 	GetTeam(ctx context.Context, teamName string) (*Team, error)
 	GetReviewerAssignments(ctx context.Context, userID string) (*ReviewerAssignments, error)
 	SetUserIsActive(ctx context.Context, input *SetUserIsActiveInput) (*User, error)
+	DeactivateTeam(ctx context.Context, teamName string) (int, error)
+	SafeReassignPR(ctx context.Context, prID string) (*PullRequest, error)
+	GetStats(ctx context.Context) (*Stats, error)
 }

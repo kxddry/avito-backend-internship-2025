@@ -86,3 +86,54 @@ type SetUserIsActiveInput struct {
 	UserID   string
 	IsActive bool
 }
+
+// Stats is the statistics.
+type Stats struct {
+	Users StatsUsers `json:"users"`
+	PRs   StatsPRs   `json:"prs"`
+	Teams StatsTeams `json:"teams"`
+}
+
+// StatsUsers is the user statistics.
+type StatsUsers struct {
+	Total    int              `json:"total"`
+	Active   int              `json:"active"`
+	Inactive int              `json:"inactive"`
+	ByUser   []StatsUserEntry `json:"byUser"`
+}
+
+// StatsUserEntry is a user statistics entry.
+type StatsUserEntry struct {
+	UserID               string `json:"userId"`
+	UserName             string `json:"userName"`
+	Team                 string `json:"team"`
+	IsActive             bool   `json:"isActive"`
+	AssignedReviewsTotal int    `json:"assignedReviewsTotal"`
+	OpenReviews          int    `json:"openReviews"`
+	MergedReviews        int    `json:"mergedReviews"`
+}
+
+// StatsPRs is the PR statistics.
+type StatsPRs struct {
+	Total          int `json:"total"`
+	Open           int `json:"open"`
+	Merged         int `json:"merged"`
+	With0Reviewers int `json:"with0Reviewers"`
+	With1Reviewer  int `json:"with1Reviewer"`
+	With2Reviewers int `json:"with2Reviewers"`
+}
+
+// StatsTeams is the team statistics.
+type StatsTeams struct {
+	Total  int              `json:"total"`
+	ByTeam []StatsTeamEntry `json:"byTeam"`
+}
+
+// StatsTeamEntry is a team statistics entry.
+type StatsTeamEntry struct {
+	TeamName        string `json:"teamName"`
+	MembersTotal    int    `json:"membersTotal"`
+	MembersActive   int    `json:"membersActive"`
+	PRsCreatedTotal int    `json:"prsCreatedTotal"`
+	PRsOpen         int    `json:"prsOpen"`
+}

@@ -9,4 +9,6 @@ var (
 	updateUserQuery string
 	//go:embed queries/upsert.sql
 	upsertUserQuery string
+	//go:embed queries/get_stats.sql
+	getUserStatsQuery string
 )

@@ -87,3 +87,34 @@ func (r *Repository) getQuerier(ctx context.Context) storage.Querier {
 	}
 	return r.pool
 }
+
+// GetStats returns team statistics.
+func (r *Repository) GetStats(ctx context.Context) (*domain.StatsTeams, error) {
+	q := r.getQuerier(ctx)
+
+	rows, err := q.Query(ctx, getTeamStatsQuery)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	stats := &domain.StatsTeams{
+		ByTeam: make([]domain.StatsTeamEntry, 0),
+	}
+
+	for rows.Next() {
+		var entry domain.StatsTeamEntry
+		if err := rows.Scan(&entry.TeamName, &entry.MembersTotal, &entry.MembersActive,
+			&entry.PRsCreatedTotal, &entry.PRsOpen); err != nil {
+			return nil, err
+		}
+		stats.ByTeam = append(stats.ByTeam, entry)
+		stats.Total++
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return stats, nil
+}

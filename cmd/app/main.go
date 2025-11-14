@@ -3,11 +3,19 @@ package main
 import (
 	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/rs/zerolog/log"
 
 	"github.com/kxddry/avito-backend-internship-2025/internal/startup"
 	"github.com/kxddry/avito-backend-internship-2025/pkg/logging"
 )
+
+func init() { // only for local development
+	err := godotenv.Load()
+	if err != nil {
+		log.Warn().Err(err).Msg("no .env file found")
+	}
+}
 
 func main() {
 	cfg, err := startup.ReadConfig()

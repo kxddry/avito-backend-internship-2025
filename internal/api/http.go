@@ -382,3 +382,197 @@ func toGeneratedUser(user *domain.User) generated.User {
 		IsActive: user.IsActive,
 	}
 }
+
+// PostTeamsTeamNameDeactivate deactivates all users in a team.
+func (s *Server) PostTeamsTeamNameDeactivate(ctx context.Context, request generated.PostTeamsTeamNameDeactivateRequestObject) (
+	generated.PostTeamsTeamNameDeactivateResponseObject, error) {
+	count, err := s.service.DeactivateTeam(ctx, request.TeamName)
+	if err != nil {
+		if resp, err := s.handlePostTeamsTeamNameDeactivateError(err); err != nil || resp != nil {
+			return resp, err
+		}
+		return nil, err
+	}
+
+	return generated.PostTeamsTeamNameDeactivate200JSONResponse{
+		DeactivatedCount: &count,
+	}, nil
+}
+
+// PostPullRequestSafeReassign safely reassigns inactive reviewers on an open PR.
+func (s *Server) PostPullRequestSafeReassign(ctx context.Context, request generated.PostPullRequestSafeReassignRequestObject) (
+	generated.PostPullRequestSafeReassignResponseObject, error) {
+	if request.Body == nil {
+		return nil, echo.NewHTTPError(http.StatusBadRequest, "request body is required")
+	}
+
+	pr, err := s.service.SafeReassignPR(ctx, request.Body.PullRequestId)
+	if err != nil {
+		if resp, err := s.handlePostPullRequestSafeReassignError(err); err != nil || resp != nil {
+			return resp, err
+		}
+		return nil, err
+	}
+
+	prPayload := toGeneratedPullRequest(pr)
+	return generated.PostPullRequestSafeReassign200JSONResponse{
+		Pr: &prPayload,
+	}, nil
+}
+
+// GetStats returns statistics.
+func (s *Server) GetStats(ctx context.Context, request generated.GetStatsRequestObject) (
+	generated.GetStatsResponseObject, error) {
+	stats, err := s.service.GetStats(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return toGeneratedStats(stats), nil
+}
+
+func toGeneratedStats(stats *domain.Stats) generated.GetStats200JSONResponse {
+	response := generated.GetStats200JSONResponse{}
+
+	if stats.Users.ByUser != nil {
+		byUser := make([]struct {
+			AssignedReviewsTotal *int    `json:"assignedReviewsTotal,omitempty"`
+			IsActive             *bool   `json:"isActive,omitempty"`
+			MergedReviews        *int    `json:"mergedReviews,omitempty"`
+			OpenReviews          *int    `json:"openReviews,omitempty"`
+			Team                 *string `json:"team,omitempty"`
+			UserId               *string `json:"userId,omitempty"`
+			UserName             *string `json:"userName,omitempty"`
+		}, 0, len(stats.Users.ByUser))
+
+		for _, u := range stats.Users.ByUser {
+			entry := struct {
+				AssignedReviewsTotal *int    `json:"assignedReviewsTotal,omitempty"`
+				IsActive             *bool   `json:"isActive,omitempty"`
+				MergedReviews        *int    `json:"mergedReviews,omitempty"`
+				OpenReviews          *int    `json:"openReviews,omitempty"`
+				Team                 *string `json:"team,omitempty"`
+				UserId               *string `json:"userId,omitempty"`
+				UserName             *string `json:"userName,omitempty"`
+			}{
+				AssignedReviewsTotal: &u.AssignedReviewsTotal,
+				IsActive:             &u.IsActive,
+				MergedReviews:        &u.MergedReviews,
+				OpenReviews:          &u.OpenReviews,
+				Team:                 &u.Team,
+				UserId:               &u.UserID,
+				UserName:             &u.UserName,
+			}
+			byUser = append(byUser, entry)
+		}
+		response.Users = &struct {
+			Active *int `json:"active,omitempty"`
+			ByUser *[]struct {
+				AssignedReviewsTotal *int    `json:"assignedReviewsTotal,omitempty"`
+				IsActive             *bool   `json:"isActive,omitempty"`
+				MergedReviews        *int    `json:"mergedReviews,omitempty"`
+				OpenReviews          *int    `json:"openReviews,omitempty"`
+				Team                 *string `json:"team,omitempty"`
+				UserId               *string `json:"userId,omitempty"`
+				UserName             *string `json:"userName,omitempty"`
+			} `json:"byUser,omitempty"`
+			Inactive *int `json:"inactive,omitempty"`
+			Total    *int `json:"total,omitempty"`
+		}{
+			Active:   &stats.Users.Active,
+			ByUser:   &byUser,
+			Inactive: &stats.Users.Inactive,
+			Total:    &stats.Users.Total,
+		}
+	}
+
+	if stats.Teams.ByTeam != nil {
+		byTeam := make([]struct {
+			MembersActive   *int    `json:"membersActive,omitempty"`
+			MembersTotal    *int    `json:"membersTotal,omitempty"`
+			PrsCreatedTotal *int    `json:"prsCreatedTotal,omitempty"`
+			PrsOpen         *int    `json:"prsOpen,omitempty"`
+			TeamName        *string `json:"teamName,omitempty"`
+		}, 0, len(stats.Teams.ByTeam))
+
+		for _, t := range stats.Teams.ByTeam {
+			entry := struct {
+				MembersActive   *int    `json:"membersActive,omitempty"`
+				MembersTotal    *int    `json:"membersTotal,omitempty"`
+				PrsCreatedTotal *int    `json:"prsCreatedTotal,omitempty"`
+				PrsOpen         *int    `json:"prsOpen,omitempty"`
+				TeamName        *string `json:"teamName,omitempty"`
+			}{
+				MembersActive:   &t.MembersActive,
+				MembersTotal:    &t.MembersTotal,
+				PrsCreatedTotal: &t.PRsCreatedTotal,
+				PrsOpen:         &t.PRsOpen,
+				TeamName:        &t.TeamName,
+			}
+			byTeam = append(byTeam, entry)
+		}
+		response.Teams = &struct {
+			ByTeam *[]struct {
+				MembersActive   *int    `json:"membersActive,omitempty"`
+				MembersTotal    *int    `json:"membersTotal,omitempty"`
+				PrsCreatedTotal *int    `json:"prsCreatedTotal,omitempty"`
+				PrsOpen         *int    `json:"prsOpen,omitempty"`
+				TeamName        *string `json:"teamName,omitempty"`
+			} `json:"byTeam,omitempty"`
+			Total *int `json:"total,omitempty"`
+		}{
+			ByTeam: &byTeam,
+			Total:  &stats.Teams.Total,
+		}
+	}
+
+	response.Prs = &struct {
+		Merged         *int `json:"merged,omitempty"`
+		Open           *int `json:"open,omitempty"`
+		Total          *int `json:"total,omitempty"`
+		With0Reviewers *int `json:"with0Reviewers,omitempty"`
+		With1Reviewer  *int `json:"with1Reviewer,omitempty"`
+		With2Reviewers *int `json:"with2Reviewers,omitempty"`
+	}{
+		Merged:         &stats.PRs.Merged,
+		Open:           &stats.PRs.Open,
+		Total:          &stats.PRs.Total,
+		With0Reviewers: &stats.PRs.With0Reviewers,
+		With1Reviewer:  &stats.PRs.With1Reviewer,
+		With2Reviewers: &stats.PRs.With2Reviewers,
+	}
+
+	return response
+}
+
+func (s *Server) handlePostTeamsTeamNameDeactivateError(err error) (generated.PostTeamsTeamNameDeactivateResponseObject, error) {
+	appErr, err := unwrapDomainError(err)
+	if err != nil || appErr == nil {
+		return nil, err
+	}
+
+	payload := makeErrorPayload(appErr)
+
+	switch payload.status {
+	case http.StatusNotFound:
+		return generated.PostTeamsTeamNameDeactivate404JSONResponse(payload.body), nil
+	default:
+		return nil, echo.NewHTTPError(payload.status, payload.body.Error.Message)
+	}
+}
+
+func (s *Server) handlePostPullRequestSafeReassignError(err error) (generated.PostPullRequestSafeReassignResponseObject, error) {
+	appErr, err := unwrapDomainError(err)
+	if err != nil || appErr == nil {
+		return nil, err
+	}
+
+	payload := makeErrorPayload(appErr)
+
+	switch payload.status {
+	case http.StatusNotFound:
+		return generated.PostPullRequestSafeReassign404JSONResponse(payload.body), nil
+	default:
+		return nil, echo.NewHTTPError(payload.status, payload.body.Error.Message)
+	}
+}

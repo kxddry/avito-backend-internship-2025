@@ -69,6 +69,7 @@ type MockPullRequestRepository struct {
 	GetByIDFunc          func(ctx context.Context, pullRequestID string) (domain.PullRequest, error)
 	GetPRAssignmentsFunc func(ctx context.Context, reviewerID string) ([]domain.PullRequestShort, error)
 	UpdateFunc           func(ctx context.Context, pr *domain.PullRequest) error
+	GetStatsFunc         func(ctx context.Context) (*domain.StatsPRs, error)
 }
 
 func (m *MockPullRequestRepository) Create(ctx context.Context, pr *domain.PullRequest) error {
@@ -99,10 +100,18 @@ func (m *MockPullRequestRepository) Update(ctx context.Context, pr *domain.PullR
 	return nil
 }
 
+func (m *MockPullRequestRepository) GetStats(ctx context.Context) (*domain.StatsPRs, error) {
+	if m.GetStatsFunc != nil {
+		return m.GetStatsFunc(ctx)
+	}
+	return &domain.StatsPRs{}, nil
+}
+
 // MockTeamRepository is a mock implementation of storage.TeamRepository.
 type MockTeamRepository struct {
 	CreateFunc    func(ctx context.Context, team *domain.Team) error
 	GetByNameFunc func(ctx context.Context, teamName string) (domain.Team, error)
+	GetStatsFunc  func(ctx context.Context) (*domain.StatsTeams, error)
 }
 
 func (m *MockTeamRepository) Create(ctx context.Context, team *domain.Team) error {
@@ -119,11 +128,19 @@ func (m *MockTeamRepository) GetByName(ctx context.Context, teamName string) (do
 	return domain.Team{}, storage.ErrNotFound
 }
 
+func (m *MockTeamRepository) GetStats(ctx context.Context) (*domain.StatsTeams, error) {
+	if m.GetStatsFunc != nil {
+		return m.GetStatsFunc(ctx)
+	}
+	return &domain.StatsTeams{}, nil
+}
+
 // MockUserRepository is a mock implementation of storage.UserRepository.
 type MockUserRepository struct {
 	GetByIDFunc     func(ctx context.Context, userID string) (domain.User, error)
 	UpdateFunc      func(ctx context.Context, user *domain.User) error
 	UpsertBatchFunc func(ctx context.Context, users []domain.User) error
+	GetStatsFunc    func(ctx context.Context) (*domain.StatsUsers, error)
 }
 
 func (m *MockUserRepository) GetByID(ctx context.Context, userID string) (domain.User, error) {
@@ -145,4 +162,11 @@ func (m *MockUserRepository) UpsertBatch(ctx context.Context, users []domain.Use
 		return m.UpsertBatchFunc(ctx, users)
 	}
 	return nil
+}
+
+func (m *MockUserRepository) GetStats(ctx context.Context) (*domain.StatsUsers, error) {
+	if m.GetStatsFunc != nil {
+		return m.GetStatsFunc(ctx)
+	}
+	return &domain.StatsUsers{}, nil
 }

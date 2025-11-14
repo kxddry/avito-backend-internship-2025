@@ -156,3 +156,17 @@ func (r *Repository) getQuerier(ctx context.Context) storage.Querier {
 	}
 	return r.pool
 }
+
+// GetStats returns PR statistics.
+func (r *Repository) GetStats(ctx context.Context) (*domain.StatsPRs, error) {
+	q := r.getQuerier(ctx)
+
+	var stats domain.StatsPRs
+	err := q.QueryRow(ctx, getPRStatsQuery).Scan(&stats.Total, &stats.Open, &stats.Merged, &stats.With0Reviewers, &stats.With1Reviewer, &stats.With2Reviewers)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &stats, nil
+}

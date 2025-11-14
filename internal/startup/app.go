@@ -9,6 +9,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	emiddleware "github.com/labstack/echo/v4/middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
 
 	"github.com/kxddry/avito-backend-internship-2025/internal/api"
@@ -33,6 +34,9 @@ func NewApplication(cfg *Config, service domain.AssignmentService) (*Application
 	e.Use(emiddleware.RequestID())
 	e.Use(emiddleware.Recover())
 	e.Use(httpmiddleware.Zerolog())
+	e.Use(httpmiddleware.Metrics())
+
+	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
 
 	handler := api.NewServer(service)
 	strict := generated.NewStrictHandler(handler, nil)

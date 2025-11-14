@@ -29,12 +29,14 @@ type PullRequestRepository interface {
 	GetByID(ctx context.Context, pullRequestID string) (domain.PullRequest, error)
 	GetPRAssignments(ctx context.Context, reviewerID string) ([]domain.PullRequestShort, error)
 	Update(ctx context.Context, pr *domain.PullRequest) error
+	GetStats(ctx context.Context) (*domain.StatsPRs, error)
 }
 
 // TeamRepository is the repository for teams.
 type TeamRepository interface {
 	Create(ctx context.Context, team *domain.Team) error
 	GetByName(ctx context.Context, teamName string) (domain.Team, error)
+	GetStats(ctx context.Context) (*domain.StatsTeams, error)
 }
 
 // UserRepository is the repository for users.
@@ -42,6 +44,7 @@ type UserRepository interface {
 	GetByID(ctx context.Context, userID string) (domain.User, error)
 	Update(ctx context.Context, user *domain.User) error
 	UpsertBatch(ctx context.Context, users []domain.User) error
+	GetStats(ctx context.Context) (*domain.StatsUsers, error)
 }
 
 // Tx is the transaction.

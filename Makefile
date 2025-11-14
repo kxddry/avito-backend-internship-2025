@@ -1,6 +1,7 @@
 .PHONY: generate generate-types generate-server clean-gen
 .PHONY: test test-unit test-integration test-e2e test-all test-coverage
 .PHONY: test-setup test-teardown test-db-up test-db-down
+.PHONY: run
 
 generate: clean-gen generate-types generate-server
 
@@ -81,3 +82,20 @@ test-db-down:
 test-clean: test-db-down
 	@echo "Cleaning test data..."
 	rm -f coverage.out coverage.html
+
+# Stress testing
+stress:
+	@echo "Running stress test..."
+	go run ./cmd/stresser
+
+# Profiling
+pprof:
+	@echo "Opening pprof web interface..."
+	@echo "Make sure the application is running..."
+	go tool pprof -http=:8081 http://localhost:6060/debug/pprof/profile?seconds=30
+
+# Run the application locally (for docker, just run docker-compose up)
+run:
+	@echo "Running the application..."
+	docker-compose up postgres migrate -d
+	go run ./cmd/app -config=config.local.yaml

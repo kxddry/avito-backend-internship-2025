@@ -438,3 +438,134 @@ paths:
                     pull_request_name: Add search
                     author_id: u1
                     status: OPEN
+
+  /teams/{team_name}/deactivate:
+    post:
+      tags: [Teams]
+      summary: Массово деактивировать всех пользователей команды
+      parameters:
+        - name: team_name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Команда деактивирована
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deactivated_count:
+                    type: integer
+        '404':
+          description: Команда не найдена
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /pullRequest/safeReassign:
+    post:
+      tags: [PullRequests]
+      summary: Безопасно переназначить всех неактивных ревьюверов открытого PR
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ pull_request_id ]
+              properties:
+                pull_request_id: { type: string }
+      responses:
+        '200':
+          description: PR обновлен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pr:
+                    $ref: '#/components/schemas/PullRequest'
+        '404':
+          description: PR не найден
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /stats:
+    get:
+      tags: [Stats]
+      summary: Получить статистику по пользователям, PR и командам
+      responses:
+        '200':
+          description: Статистика
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      active:
+                        type: integer
+                      inactive:
+                        type: integer
+                      byUser:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            userId:
+                              type: string
+                            userName:
+                              type: string
+                            team:
+                              type: string
+                            isActive:
+                              type: boolean
+                            assignedReviewsTotal:
+                              type: integer
+                            openReviews:
+                              type: integer
+                            mergedReviews:
+                              type: integer
+                  prs:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      open:
+                        type: integer
+                      merged:
+                        type: integer
+                      with0Reviewers:
+                        type: integer
+                      with1Reviewer:
+                        type: integer
+                      with2Reviewers:
+                        type: integer
+                  teams:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      byTeam:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            teamName:
+                              type: string
+                            membersTotal:
+                              type: integer
+                            membersActive:
+                              type: integer
+                            prsCreatedTotal:
+                              type: integer
+                            prsOpen:
+                              type: integer

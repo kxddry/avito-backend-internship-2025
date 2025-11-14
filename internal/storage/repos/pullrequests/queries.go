@@ -11,4 +11,6 @@ var (
 	updatePRQuery string
 	//go:embed queries/get_assignments.sql
 	getAssignmentsQuery string
+	//go:embed queries/get_stats.sql
+	getPRStatsQuery string
 )

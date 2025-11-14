@@ -116,6 +116,11 @@ type PostPullRequestReassignJSONBody struct {
 	PullRequestId string `json:"pull_request_id"`
 }
 
+// PostPullRequestSafeReassignJSONBody defines parameters for PostPullRequestSafeReassign.
+type PostPullRequestSafeReassignJSONBody struct {
+	PullRequestId string `json:"pull_request_id"`
+}
+
 // GetTeamGetParams defines parameters for GetTeamGet.
 type GetTeamGetParams struct {
 	// TeamName Уникальное имя команды
@@ -142,6 +147,9 @@ type PostPullRequestMergeJSONRequestBody PostPullRequestMergeJSONBody
 
 // PostPullRequestReassignJSONRequestBody defines body for PostPullRequestReassign for application/json ContentType.
 type PostPullRequestReassignJSONRequestBody PostPullRequestReassignJSONBody
+
+// PostPullRequestSafeReassignJSONRequestBody defines body for PostPullRequestSafeReassign for application/json ContentType.
+type PostPullRequestSafeReassignJSONRequestBody PostPullRequestSafeReassignJSONBody
 
 // PostTeamAddJSONRequestBody defines body for PostTeamAdd for application/json ContentType.
 type PostTeamAddJSONRequestBody = Team

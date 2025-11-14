@@ -9,7 +9,7 @@ COPY pkg/ ./pkg/
 COPY internal/ ./internal/
 COPY "cmd/" "./cmd/"
 
-RUN go build -o app ./cmd/app
+RUN go build -tags=pprof -o app ./cmd/app
 
 FROM alpine:latest
 

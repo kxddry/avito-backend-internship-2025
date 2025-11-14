@@ -97,3 +97,40 @@ func derefString(value *string) string {
 	}
 	return *value
 }
+
+// GetStats returns user statistics.
+func (r *Repository) GetStats(ctx context.Context) (*domain.StatsUsers, error) {
+	q := r.getQuerier(ctx)
+
+	rows, err := q.Query(ctx, getUserStatsQuery)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	stats := &domain.StatsUsers{
+		ByUser: make([]domain.StatsUserEntry, 0),
+	}
+
+	for rows.Next() {
+		var entry domain.StatsUserEntry
+		if err := rows.Scan(&entry.UserID, &entry.UserName, &entry.Team, &entry.IsActive,
+			&entry.AssignedReviewsTotal, &entry.OpenReviews, &entry.MergedReviews); err != nil {
+			return nil, err
+		}
+		stats.ByUser = append(stats.ByUser, entry)
+
+		if entry.IsActive {
+			stats.Active++
+		} else {
+			stats.Inactive++
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	stats.Total = stats.Active + stats.Inactive
+	return stats, nil
+}
