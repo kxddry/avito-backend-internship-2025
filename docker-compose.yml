@@ -47,7 +47,7 @@ services:
     env_file:
         - ./.env
     volumes:
-        - ./config.docker.yaml:/app/config.docker.yaml:ro
+        - ./config.docker.yaml:/app/config.docker.yaml
     ports:
       - "${SERVER_PORT:-8080}:${SERVER_PORT:-8080}"
       - "6060:6060"  # pprof
@@ -60,7 +60,7 @@ services:
     image: prom/prometheus:latest
     restart: unless-stopped
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus
     ports:
       - "9090:9090"
