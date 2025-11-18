@@ -1,0 +1,13 @@
+debug: false
+
+db:
+  host: "postgres"
+  port: 5432
+  user: "db_user"
+  db_name: "avito_db"
+  ssl_mode: "disable"
+
+server:
+  port: 8080
+  timeout: 5s
+  idle_timeout: 30s
